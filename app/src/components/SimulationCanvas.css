@@ -1,0 +1,9 @@
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 20px; /* adjust this value to add space between grid items */
+}
+
+.grid-item {
+  font-size: 11px;
+}
