@@ -19,6 +19,7 @@ class PromptQueue {
         prompt: prompt,
         callback: callback,
         message: '',
+        start_time: null,
       }
     );
     this.processQueue();
@@ -27,16 +28,19 @@ class PromptQueue {
   getResults(partialResults, complete, promptRequest, self) {
     promptRequest.message += partialResults;
 
+    // If we have a streaming callback function, send partial results
+    if ('streamingCallback' in promptRequest) {
+      promptRequest.streamingCallback(partialResults);
+    }
+
     if (complete) {
-      console.log("COMPLETE")
-      promptRequest.callback(promptRequest.message);
+      promptRequest.callback(promptRequest.message, promptRequest.start_time);
       self.isRunning = false;
 
       // Timeout to lesses chance of overlap
       setTimeout(() => {
         self.processQueue();
-      }, 200);
-      
+      }, 150);
     }
   }
 
@@ -44,11 +48,12 @@ class PromptQueue {
     if (!this.isRunning && this.queue.length > 0) {
       this.isRunning = true;
       const promptRequest = this.queue.shift();
+      promptRequest['start_time'] = Date.now();
 
       const results = this.getResults
       this.llmInference.generateResponse(
         promptRequest.prompt, 
-        (partialResults, complete) =>  results(partialResults, complete, promptRequest, this)
+        (partialResults, complete) => results(partialResults, complete, promptRequest, this)
       );
     }
   }
@@ -58,7 +63,7 @@ function App() {
   const userAgent = navigator.userAgent;
   const [isLoaded, setIsLoaded] = useState(false);
   const [llmInference, setLlmInference] = useState(null);
-  const [promptQueue, setPromptQueue] = useState(null)
+  const [promptQueue, setPromptQueue] = useState(null);
 
   useEffect(() => {  
     if (promptQueue != null) {
@@ -68,8 +73,7 @@ function App() {
 
   useEffect(() => {  
     if (llmInference != null) {
-      setPromptQueue(new PromptQueue(llmInference))
-      
+      setPromptQueue(new PromptQueue(llmInference));
     }
   }, [llmInference]);
 

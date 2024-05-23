@@ -1,50 +1,93 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../App.css';
 import './SimulationCanvas.css';
+import SimulationDrawer from './SimulationDrawer';
+import { intentTests, categories, definitions } from './helpers';
 
-function SimulationCanvas(props) {
 
-  const [question, setQuestion] = useState(null)
-  const [message, setMessage] = useState(null)
 
-  const actions = {
-    'a': "Function call about the location or directions",
-    'b': "Function call about the weather",
-    'c': "Function call about a person",
-    'd': "No function call",
+
+class OrchestratorAgent {
+  constructor(
+    promptQueue, 
+    setTestResults, 
+    testResultsRef,
+    categories, 
+    definitions,
+  ) {
+    this.promptQueue = promptQueue;
+    this.setTestResults = setTestResults;
+    this.testResultsRef = testResultsRef;
+    this.categories = categories;
+    this.definitions = definitions;
   }
   
-  function routeInput(event) {
-    setQuestion(event.target.innerText)
-    setMessage("...")
-
-    const prompt = `First, read the following text: ${event.target.innerText}
+  routeInput(intentTest) {
+    const prompt = `First, read the following text: ${intentTest.question}
     
-    Next, read through all of the categories found below and list the letter of the category that best describes the text like this: {a}. Make sure your answer is less than 10 words max.
+    Next, read through all of the categories found below. After that, list the letter of the category that best describes the text. Put the letter in JSON line this {a}. Make sure your answer is no more than 10 words.
     
     CATEGORIES:
-    a) The text is about location or travel directions.
-    b) The text is about the weather.
-    c) The text is about a person.
-    d) The text is NOT location or travel directions and is NOT about the weather.`
+    ${definitions}`
 
-    const callback = (msg) => {
+    const callback = (msg, start_time) => {
       const matches = msg.match(/[a-dA-D]{1}(?=[\}\)])/g);
-      console.log(msg)
-      if (matches && matches[0] in actions) {
-        if (matches[0] == 'd') setMessage("No matches");
-        else setMessage(actions[matches[0]]);
-      } else {
-        setMessage("No matches");
+      let category = "None";
+      let letter = "None"
+
+      if (matches) {
+        letter = matches[0];
+        if (matches[0] in this.categories) category = this.categories[matches[0]];
       }
+      const testResult = {
+        "question": intentTest.question,
+        "type": intentTest.type,
+        "category": category,
+        "isMatch": category == intentTest.type,
+        "letter": letter,
+        "duration": Date.now() - start_time,
+        "message": msg,
+      }
+  
+      //setTestResults([...testResults, testResult]);
+      const prevTestResults = this.testResultsRef.current
+      this.setTestResults(prevTestResults => [...prevTestResults, testResult]);
     }
-    props.promptQueue.addPromptRequest(prompt, callback) 
+
+    this.promptQueue.addPromptRequest(prompt, callback) 
   }
+
+  batchTest() {
+    this.setTestResults([]);
+
+    for (let i = 0; i < intentTests.length; i++) {
+      this.routeInput(intentTests[i])
+    }
+  }
+}
+
+function SimulationCanvas(props) {
+  const [orchestratorAgent, setOrchestratorAgent] = useState(null);
+  const [testResults, setTestResults] = useState([]);
+  const testResultsRef = useRef(testResults);
+  const [drawerContent, setDrawerContent] = useState(null)
+  
+  useEffect(() => {  
+    setOrchestratorAgent(
+      new OrchestratorAgent(
+        props.promptQueue,
+        setTestResults,
+        testResultsRef,
+        categories, 
+        definitions,
+      )
+    );
+  }, []);
+  
 
   return (
     <div style={{
-      background:"#eee",
-      height:"100vh", 
+      background:"#fff",
       display:"flex",
       flexDirection:"column",
     }}>
@@ -56,141 +99,65 @@ function SimulationCanvas(props) {
         <div style={{flex:1}}></div>
       </div>
 
-      <div style={{padding:"40px", display:"flex", flexDirection: "row"}}>
-
+      <div style={{padding:"40px", display:"flex", flexDirection: "column"}}>
+        <div>  
+          <div>
+            <button 
+              style={{width:"300px", height:"40px"}}
+              onClick={() => {
+                console.log('orchestratorAgent', orchestratorAgent)
+                orchestratorAgent.batchTest()
+              }}
+            >Run Test Batch</button>
+          </div>
+        </div>
+        
         <div>
-          <div>
-          <button 
-            style={{width:"300px", height:"40px"}}
-            onClick={() => {
-              props.promptQueue.addPromptRequest("Where is Berkeley?", (msg) => console.log("1 DONE", msg))
-              props.promptQueue.addPromptRequest("What is the capital of France?", (msg) => console.log("2 DONE", msg))
-              props.promptQueue.addPromptRequest("What is the capital of Switzerland?", (msg) => console.log("3 DONE", msg))
-              props.promptQueue.addPromptRequest("What are tacos?", (msg) => console.log("4 DONE", msg))
-              props.promptQueue.addPromptRequest("What is the capital of California", (msg) => console.log("5 DONE", msg))
-            }}
-          >Batch Test</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >How far is Berkeley from San Francisco</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >Where is New York?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >How long does it take to get to My Coffee Roaster?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >How does traffic look today?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >What's the weather going to be like in Berkeley?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >Should I bring a coat with me today?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >Is it going to rain?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >How cold will it get this week?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >Who is John Lennon?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >Who is Barack Obama?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >Who is Marlon Brando?</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >What wine goes well with fish</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >Do you like country music</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >I want to make tacos</button>
-          </div>
-          <div>
-            <button 
-              style={{width:"300px", height:"40px",}}
-              onClick={routeInput}
-            >What is a language model?</button>
-          </div>
+          <table className="testTable">
+          <tbody>
+            <tr className="tr_header">
+              <td>Question</td>
+              <td>Type</td>
+              <td>LLM Guess</td>
+              <td>Match</td>
+              <td>Letter</td>
+              <td>Duration</td>
+              {/*<td>Message</td>*/}
+              <td>Output</td>
+            </tr>
+            
+            {testResults.map((result, index) => (
+              <tr 
+                key={'result_row_' + index}
+                className="tr_data"
+                onClick={() => setDrawerContent(result.question)}
+              >
+                <td>{result.question}</td>
+                <td>{result.type}</td>
+                <td>{result.category}</td>
+                <td style={{textAlign:"center"}}>
+                  {result.isMatch ?  
+                    <i className="material-icons" style={{color: "#37A169" }}>check</i> : 
+                    <i className="material-icons" style={{color: "#E56D6D" }}>error</i>
+                  }
+                </td>
+                <td>{result.letter}</td>
+                <td>{result.duration}</td>
+                {/*<td>{result.message}</td>*/}
+                <td>
+                  This is output (either chat text, or function call results)
+                </td>
+              </tr>
+            ))}
+            
+            </tbody>
+          </table>
         </div>
-      
-        {/*<div style={{width:"350px", marginLeft:"20px"}}>
-          CATEGORIES:<br/>
-            a) The text is about location or travel directions.<br/>
-            b) The text is about the weather.<br/>
-            c) The text is about a person.<br/>
-            d) The text is NOT location or travel directions and is NOT about the weather.<br/>
-          </div>*/}
-        
-        <div style={{width:"300px", marginLeft:"20px"}}>
-          <div style={{marginBottom:"20px"}}>
-            {question}
-          </div>
-          <div style={{marginBottom:"20px"}}>
-            {message}
-          </div>
-        </div>
-        
       </div>
 
-      <div style={{
-        position:"fixed",
-        right:"0px",
-        width:"250px",
-        height:"100%", 
-        background:"#ddd"
-      }}>
-        Hello
-      </div>
+      <SimulationDrawer 
+        drawerContent={drawerContent}
+      />
 
     </div>
   );

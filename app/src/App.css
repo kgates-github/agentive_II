@@ -1,8 +1,41 @@
 
 html, body {
-  height: 100%;
   margin: 0;
   padding: 0;
+}
+
+.testTable {
+  width: 100%;
+  margin-top: 40px;
+}
+
+.testTable .tr_header {
+  padding-left: 12px;
+  padding-right: 12px;
+  height: 40px;
+  background: #888;
+  color:white;
+  line-height: 14px;
+}
+
+.testTable .tr_header td {
+  padding-left: 12px;
+  font-weight: 600;
+}
+
+.testTable .tr_data {
+  cursor: pointer;
+}
+
+.testTable .tr_data:hover {
+  color: #888 !important;
+}
+
+.testTable .tr_data td {
+  padding-left: 12px;
+  padding-right: 12px;
+  height: 40px;
+  background: #f1f1f1;
 }
 
 button {
