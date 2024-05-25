@@ -13,6 +13,10 @@ class PromptQueue {
     this.isRunning = false;
   }
 
+  clearQueue() {
+    this.queue = [];
+  }
+
   addPromptRequest(prompt, callback) {
     this.queue.push(
       {

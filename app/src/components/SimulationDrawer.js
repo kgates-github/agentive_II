@@ -27,8 +27,8 @@ function SimulationDrawer(props) {
   }
   
   useEffect(() => {  
-    if (props.drawerContent) setIsOpen(true)
-  }, [props.drawerContent]);
+    if (props.drawerContentId) setIsOpen(true)
+  }, [props.drawerContentId]);
   
   return (
     <motion.div
@@ -38,7 +38,6 @@ function SimulationDrawer(props) {
       onAnimationComplete={() => {
         //setIsUnfurled(true);
       }}
-      onClick={() => setIsOpen(false)}
       style={{
         position:"fixed",
         right:"0px",
@@ -50,9 +49,18 @@ function SimulationDrawer(props) {
         boxShadow: "-8px 0px 8px rgba(0, 0, 0, 0.2)",
       }}
     >
+      <i 
+        className="material-icons" 
+        onClick={() => setIsOpen(false)}
+        style={{color: "#999", fontSize:"32px", cursor:"pointer"}}
+      >chevron_right</i>
+
+      <div style={{fontWeight:"600"}}>
+        {props.drawerContentId}
+      </div>
+
       https://api.weather.gov/points/{37.8715},{122.2730}
-      <br/>
-      {props.drawerContent}
+      
     </motion.div>
   );
 }

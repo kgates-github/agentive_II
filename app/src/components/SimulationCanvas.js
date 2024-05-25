@@ -2,10 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../App.css';
 import './SimulationCanvas.css';
 import SimulationDrawer from './SimulationDrawer';
+import TestSummary from './TestSummary';
 import { intentTests, categories, definitions } from './helpers';
+import { v4 as uuidv4 } from 'uuid';
 
+class FunctionCallAgent {
+  constructor() {
+    // Set up properties to connect to GPT
+  }
 
+  getFunctionCall(prompt) {
+    // This calls GPT function call
+  }
+}
 
+class WeatherAgent extends FunctionCallAgent {
+  constructor() {
+    super();
+  }
+}
 
 class OrchestratorAgent {
   constructor(
@@ -31,7 +46,7 @@ class OrchestratorAgent {
     ${definitions}`
 
     const callback = (msg, start_time) => {
-      const matches = msg.match(/[a-dA-D]{1}(?=[\}\)])/g);
+      const matches = msg.match(/[a-eA-E]{1}(?=[\}\)])/g);
       let category = "None";
       let letter = "None"
 
@@ -40,6 +55,7 @@ class OrchestratorAgent {
         if (matches[0] in this.categories) category = this.categories[matches[0]];
       }
       const testResult = {
+        "id": uuidv4(),
         "question": intentTest.question,
         "type": intentTest.type,
         "category": category,
@@ -58,6 +74,7 @@ class OrchestratorAgent {
   }
 
   batchTest() {
+    this.promptQueue.clearQueue();
     this.setTestResults([]);
 
     for (let i = 0; i < intentTests.length; i++) {
@@ -70,7 +87,10 @@ function SimulationCanvas(props) {
   const [orchestratorAgent, setOrchestratorAgent] = useState(null);
   const [testResults, setTestResults] = useState([]);
   const testResultsRef = useRef(testResults);
-  const [drawerContent, setDrawerContent] = useState(null)
+  const [drawerContentId, setDrawerContentId] = useState(null)
+  const [numMatches, setNumMatches] = useState(0)
+  const [testResultsByCategory, setTestResultsByCategory] = useState(null)
+
   
   useEffect(() => {  
     setOrchestratorAgent(
@@ -83,6 +103,24 @@ function SimulationCanvas(props) {
       )
     );
   }, []);
+
+  useEffect(() => {  
+    if (testResults.length) {
+      const matches = testResults.filter((testResult) => testResult.isMatch)
+      setNumMatches(matches.length);
+
+      const categoryResults = testResults.reduce((acc, testResult) => {
+        const { type } = testResult;
+        if (!acc[type]) {
+          acc[type] = [];
+        }
+        acc[type].push(testResult);
+        return acc;
+      }, {});
+  
+      setTestResultsByCategory(categoryResults)
+    }
+  }, [testResults]);
   
 
   return (
@@ -99,23 +137,61 @@ function SimulationCanvas(props) {
         <div style={{flex:1}}></div>
       </div>
 
-      <div style={{padding:"40px", display:"flex", flexDirection: "column"}}>
-        <div>  
+      <div style={{padding:"20px", display:"flex", flexDirection: "column"}}>
+        <div style={{
+          display:"flex", 
+          flexDirection:"row", 
+          alignItems:"center", 
+          marginBottom:"12px",
+        }}>  
           <div>
-            <button 
-              style={{width:"300px", height:"40px"}}
-              onClick={() => {
-                console.log('orchestratorAgent', orchestratorAgent)
-                orchestratorAgent.batchTest()
+            <div 
+              style={{  
+                marginLeft:"32px", 
+                marginRight:"32px",  
+                paddingRight:"32px",           
+                borderRight:"1px solid #999",
+                cursor:"pointer",
+                display:"flex",
+                flexDirection:"row",
+                justifyContent:"space-evenly",
+                alignItems:"center",
               }}
-            >Run Test Batch</button>
+            >
+              <div onClick={() => {orchestratorAgent.batchTest()}}>
+                <div>
+                  <i className="material-icons" style={{color: "#777", fontSize:"40px" }}>play_circle</i> 
+                </div>
+                <div style={{color:"#444", fontSize:"12px", width:"40px", textAlign:"center"}}>Start</div>
+                
+              </div>
+              <div onClick={() => {orchestratorAgent.batchTest()}} style={{marginLeft:"32px"}}>
+                <div>
+                  <i className="material-icons" style={{color: "#777", fontSize:"40px" }}>replay</i> 
+                </div>
+                <div style={{color:"#444", fontSize:"12px", width:"40px", textAlign:"center"}}>Reset</div> 
+              </div>
+            
+            </div>
           </div>
+          
+          <TestSummary category={'All Categories'} testResults={testResults}/>
+          
+          {
+            testResultsByCategory && (
+              Object.keys(testResultsByCategory).map((category, index) => (
+                <TestSummary key={index} category={category} testResults={testResultsByCategory[category]} />
+              ))
+            )
+          }
+
         </div>
         
         <div>
           <table className="testTable">
           <tbody>
             <tr className="tr_header">
+              <td>#</td>
               <td>Question</td>
               <td>Type</td>
               <td>LLM Guess</td>
@@ -123,15 +199,17 @@ function SimulationCanvas(props) {
               <td>Letter</td>
               <td>Duration</td>
               {/*<td>Message</td>*/}
-              <td>Output</td>
+              <td>State</td>
             </tr>
             
             {testResults.map((result, index) => (
               <tr 
                 key={'result_row_' + index}
+                id={result.id}
                 className="tr_data"
-                onClick={() => setDrawerContent(result.question)}
+                onClick={() => setDrawerContentId(result.id)}
               >
+                <td>{index + 1}</td>
                 <td>{result.question}</td>
                 <td>{result.type}</td>
                 <td>{result.category}</td>
@@ -145,7 +223,7 @@ function SimulationCanvas(props) {
                 <td>{result.duration}</td>
                 {/*<td>{result.message}</td>*/}
                 <td>
-                  This is output (either chat text, or function call results)
+                  Making function call...
                 </td>
               </tr>
             ))}
@@ -156,7 +234,7 @@ function SimulationCanvas(props) {
       </div>
 
       <SimulationDrawer 
-        drawerContent={drawerContent}
+        drawerContentId={drawerContentId}
       />
 
     </div>
