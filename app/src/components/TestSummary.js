@@ -17,21 +17,30 @@ function TestSummary(props) {
     <div style={{marginLeft:"20px", width:"100px", }}>
       <div style={{color:"#444", position:"relative", bottom:"-3px", fontSize:"12px"}}>{props.category}</div>
       <div style={{background:"none", }}>
-        <span style={{letterSpacing: "-1px", lineHeight:"36px", fontSize:"36px", fontWeight:"600", color:"#888"}}>
+        <span style={{letterSpacing: "-1.5px", lineHeight:"36px", fontSize:"36px", fontWeight:"600", color:"#888"}}>
           {props.testResults.length > 0 ? Math.round((numMatches / props.testResults.length)*100) : 0}
         </span><span style={{fontSize:"16px",}}> %</span>
       </div>
-      <div style={{width:"100px", height:"6px", background:"#ddd", marginTop:"2px", marginBottom:"2px"}}>
+      <div style={{
+        width:"100px", 
+        height:"6px", 
+        background: "#ddd", 
+        marginTop:"2px", 
+        marginBottom:"2px"}}>
         <div style={{
           width:props.testResults.length > 0 ? Math.round((numMatches / props.testResults.length)*100) +"px" : 0+"px",
           height:"6px", 
-          background:"#3EBC4B",}}></div>
+          background:"#aaa",}}></div>
       </div>
       <div style={{color:"#444", fontSize:"12px"}}>
         {numMatches} of {props.testResults.length}
       </div>
+
     </div>
   );
 }
 
 export default TestSummary;
+
+
+

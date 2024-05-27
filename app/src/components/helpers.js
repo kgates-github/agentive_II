@@ -12,6 +12,7 @@ b) The text is related to the weather.
 c) The text is related to people.
 d) The text is not related to location or the weather or people.`
 
+/*
 const intentTests = [
     {
         "question": "Should I wear a coat tomorrow?",
@@ -655,6 +656,70 @@ const intentTests = [
         "question": "Who was the first African American president of the United States?",
         "type": "People"
     }
+]
+*/
+
+const intentTests = [
+  {
+      "question": "Should I wear a coat tomorrow?",
+      "type": "Weather"
+  },
+  {
+      "question": "Do I need an umbrella?",
+      "type": "Weather"
+  },
+  {
+      "question": "What’s the weather like this week?",
+      "type": "Weather"
+  },
+  {
+      "question": "Is it going to rain today?",
+      "type": "Weather"
+  },
+  {
+      "question": "What’s the temperature right now?",
+      "type": "Weather"
+  },
+  {
+      "question": "What is the capital of France?",
+      "type": "Location"
+  },
+  {
+      "question": "How far is Berkeley from San Francisco?",
+      "type": "Location"
+  },
+  {
+      "question": "Where is the Taj Mahal?",
+      "type": "Location"
+  },
+  {
+      "question": "What are the top tourist attractions in Paris?",
+      "type": "Location"
+  },
+  {
+      "question": "Where is the Great Wall of China located?",
+      "type": "Location"
+  },
+  {
+      "question": "What did Albert Einstein do?",
+      "type": "People"
+  },
+  {
+      "question": "Who is the current president of the United States?",
+      "type": "People"
+  },
+  {
+      "question": "Who was Cleopatra?",
+      "type": "People"
+  },
+  {
+      "question": "What achievements is Nelson Mandela famous for?",
+      "type": "People"
+  },
+  {
+      "question": "Who wrote 'Romeo and Juliet'?",
+      "type": "People"
+  },
 ]
 
 
