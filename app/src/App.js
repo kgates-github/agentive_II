@@ -68,7 +68,7 @@ function App() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [llmInference, setLlmInference] = useState(null);
   const [promptQueue, setPromptQueue] = useState(null);
-  const openAIRef = useRef(null);
+  const [openAI, setOpenAI] = useState(null);
 
   useEffect(() => {  
     if (promptQueue != null) {
@@ -94,7 +94,7 @@ function App() {
     if (!openaiApiKey) {
       console.log('process.env.REACT_APP_OPENAI_KEY', process.env)
     } else {
-      openAIRef.current = new OpenAI({ apiKey: openaiApiKey, dangerouslyAllowBrowser: true });
+      setOpenAI(new OpenAI({ apiKey: openaiApiKey, dangerouslyAllowBrowser: true }));
     }
   }, []);
 
@@ -104,7 +104,7 @@ function App() {
     (
       <>
         
-        {isLoaded ? <SimulationCanvas promptQueue={promptQueue} openAIRef={openAIRef}/> : null}
+        {isLoaded ? <SimulationCanvas promptQueue={promptQueue} openAI={openAI}/> : null}
         
         <div className="App">
           {/* LLM Loader */}

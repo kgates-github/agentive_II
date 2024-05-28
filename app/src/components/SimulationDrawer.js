@@ -5,7 +5,9 @@ import { motion } from "framer-motion"
 
 
 function SimulationDrawer(props) {
-  const [testResult, setTestResult] = useState(false)
+  const [testResult, setTestResult] = useState(false);
+  const [content, setContent] = useState(null);
+  const [curTab, setCurTab] = useState("simulation");
 
   // Variants
   const variants = {
@@ -21,7 +23,7 @@ function SimulationDrawer(props) {
       transition: { duration: 0.3, ease: 'easeInOut' }
     },
     closed: {
-      x: 1500,
+      x: 800,
       transition: { duration: 0.3, ease: 'easeInOut', }
     }
   }
@@ -29,8 +31,8 @@ function SimulationDrawer(props) {
   useEffect(() => {  
     if (props.drawerTestResultId) {
       const result = props.testResults.find(result => result.id === props.drawerTestResultId);
-      console.log(result)
       setTestResult(result);
+      setContent("")
     }
   }, [props.drawerTestResultId]);
   
@@ -42,7 +44,7 @@ function SimulationDrawer(props) {
       style={{
         position:"fixed",
         right:"0px",
-        width:"1380px",
+        width:"800px",
         height:"100%", 
         background:"#fff",
         borderLeft: "1px solid #888",
@@ -52,12 +54,12 @@ function SimulationDrawer(props) {
         flexDirection:"row"
       }}
     >
-      {/* LEFT SIDE */}
+      {/* MAIN */}
       <div style={{
-        width:"380px", 
+        flex:"1", 
         marginRight:"40px", 
-        borderRight:"1px solid #ccc", 
-        height:"100%",
+        height:"100vh",
+        width:"100%",
         paddingTop:"20px",
         paddingLeft:"32px",
         paddingRight:"32px",
@@ -66,27 +68,104 @@ function SimulationDrawer(props) {
       >
         {/* HEADER */}
         <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
-          <div style={{width:"120px"}}>
+          <div style={{width:"28px"}}>
             <i 
               className="material-icons" 
               onClick={() => {
                 props.setDrawerState('closed')
               }}
-              style={{color: "#999", fontSize:"28px", cursor:"pointer", position:"relative", left:"-6px"}}
+              style={{
+                color: "#999", 
+                fontSize:"28px", 
+                cursor:"pointer", 
+                position:"relative", 
+                left:"-12px",
+                top:"2px",
+              }}
             >chevron_right</i>
           </div>
-          <div style={{
-            flex:"1", fontSize:"12px", color:"#333", fontWeight:"600"}}>
+          <div>{testResult['question']}</div>
+          <div style={{flex:1}}></div>
+        </div>
+        <div style={{display:"flex", flexDirection:"row", marginTop:"24px"}}>
+          <div style={{width:"28px"}}></div>
+          <div 
+            onClick={() => setCurTab("simulation")}
+            style={{
+              width:"100px", 
+              fontSize:"12px", 
+              color:"#333", 
+              fontWeight:"600", 
+              borderTop: curTab == 'simulation' ? "3px solid #333" : "3px solid #fff" ,
+              textAlign:"center",
+              marginRight:"16px",
+              paddingTop:"6px",
+              cursor:"pointer",
+            }}>
+            SIMULATION
+          </div>
+          <div 
+            onClick={() => setCurTab("details")}
+            style={{
+              width:"100px", 
+              fontSize:"12px", 
+              color:"#333", 
+              fontWeight:"600", 
+              borderTop: curTab == 'details' ? "3px solid #333" : "3px solid #fff" ,
+              textAlign:"center",
+              marginRight:"16px",
+              paddingTop:"6px",
+              cursor:"pointer",
+            }}>
             DETAILS
           </div>
-          <div onClick={() => {props.setDrawerState('open')}} 
-            style={{cursor:"pointer"}}
-          >
-            <i className="material-icons" style={{color: "#999", fontSize:"28px" }}>arrow_circle_right</i> 
-          </div>
         </div>
-       
-        <div style={{background:"none", marginTop:"40px"}}>
+
+        {/* SIMULATION */}
+        <div style={{
+          marginTop:"40px",
+          marginLeft:"0px",
+          border: "3px solid white",
+          display: curTab == 'simulation' ? "flex" : "none" ,
+          flexDirection:"row",
+        }}>
+          <div 
+            style={{  
+              marginLeft:"0px", 
+              marginRight:"28px",  
+              paddingRight:"36px",           
+              display:"flex",
+              flexDirection:"column",
+              alignItems:"flex-start",
+              background:"none",
+            }}
+          >
+            <div style={{marginTop:"12px",}}>
+              <div onClick={() => {testResult.functionAgent.getFunctionCall(setContent)}}  
+                style={{ cursor:"pointer",}}>
+                <i className="material-icons" style={{color: "#777", fontSize:"36px" }}>play_circle</i> 
+              </div>
+              <div style={{marginTop:"-5px", color:"#444", fontSize:"12px", width:"40px", textAlign:"center"}}>Start</div>
+            </div>
+            <div onClick={() => {}} style={{marginTop:"12px",}}>
+              <div onClick={() => {testResult.functionAgent.getFunctionCall(setContent)}}  
+                style={{ cursor:"pointer",}}>
+                <i className="material-icons" style={{color: "#777", fontSize:"36px" }}>replay</i> 
+              </div>
+              <div style={{marginTop:"-5px", color:"#444", fontSize:"12px", width:"40px", textAlign:"center"}}>Reset</div> 
+            </div>
+          </div>
+          {content}
+          
+        {/* END MAIN */}
+        </div>
+
+        {/* DETAILS */}
+        <div style={{
+          background:"none", 
+          marginTop:"40px",
+          display: curTab == 'details' ? "block" : "none" ,
+        }}>
         {
           testResult ? Object.entries(testResult).map(([key, value], index) => (
             <div key={index} style={{display:"flex", flexDirection:"row", marginBottom:"12px"}}>
@@ -97,72 +176,14 @@ function SimulationDrawer(props) {
         }
         </div>
       </div>
-      {/* RIGHT SIDE */}
-      <div style={{flex:"1", background:"#fff"}}>
-        {/* LEFT SIDE */}
-        <div style={{
-          marginRight:"40px", 
-          height:"100%",
-          paddingTop:"20px",
-          paddingLeft:"0px",
-          paddingRight:"32px",
-          paddingBottom:"32px",
-          background:"none",
-        }}
-        >
-          {/* HEADER */}
-          <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
-            <div style={{width:"120px"}}>
-              <i 
-                className="material-icons" 
-                onClick={() => {
-                  props.setDrawerState('partial')
-                }}
-                style={{color: "#999", fontSize:"28px", cursor:"pointer", position:"relative", left:"-6px"}}
-              >chevron_right</i>
-            </div>
-            <div style={{
-              flex:"1", fontSize:"12px", color:"#333", fontWeight:"600"}}>
-              SIMULATION
-            </div>
-          </div>
-          
-          
-
-          <div style={{}}>
-            <div 
-              style={{  
-                marginLeft:"0px", 
-                marginRight:"28px",  
-                paddingRight:"36px",           
-                cursor:"pointer",
-                display:"flex",
-                flexDirection:"row",
-                alignItems:"center",
-              }}
-            >
-              <div onClick={() => {alert(testResult.functionAgent.getAgentClass())}} style={{marginTop:"12px",}}>
-                <div>
-                  <i className="material-icons" style={{color: "#777", fontSize:"36px" }}>play_circle</i> 
-                </div>
-                <div style={{marginTop:"-5px", color:"#444", fontSize:"12px", width:"40px", textAlign:"center"}}>Start</div>
-              </div>
-              <div onClick={() => {}} style={{marginLeft:"20px",marginTop:"12px",}}>
-                <div>
-                  <i className="material-icons" style={{color: "#777", fontSize:"36px" }}>replay</i> 
-                </div>
-                <div style={{marginTop:"-5px", color:"#444", fontSize:"12px", width:"40px", textAlign:"center"}}>Reset</div> 
-              </div>
-            </div>
-          </div>
-        
-
-        {/* END MAIN */}
-        </div>
-      </div>
       
     </motion.div>
   );
 }
 
 export default SimulationDrawer;
+
+
+{/* 
+ 
+*/}

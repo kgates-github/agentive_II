@@ -7,10 +7,11 @@ import axios from 'axios';
 import { intentTests, categories, definitions } from './helpers';
 
 class FunctionCallAgent {
-  constructor(orchestrator, question, openAIRef) {
+  constructor(orchestrator, question, openAI) {
     this.orchestrator = orchestrator; // For callbacks
     this.question = question;
-    this.openAIRef = openAIRef;
+    this.openAI = openAI;
+    this.function_call = "Wikipedia"
 
     this.functions = [
       {
@@ -21,10 +22,18 @@ class FunctionCallAgent {
           properties: {
             location: {
               type: "string",
-              description: "The name of the city to get the weather for."
+              description: "The location and timeframe for a weather forecast."
+            },
+            start: {
+              type: "string",
+              description: "Start date (yyyy-mm-dd hh)",
+            },
+            end: {
+              type: "string",
+              description: "End time (yyyy-mm-dd hh)",
             }
           },
-          required: ["location"]
+          required: ["location", "start", "end"]
         }
       },{
         name: "Location",
@@ -41,13 +50,13 @@ class FunctionCallAgent {
         }
       },{
         name: "Wikipedia",
-        description: "Get wikipedia page for a given question",
+        description: "1) Get the appropriate wikipedia page URL that would contain the answer to the question.",
         parameters: {
           type: "object",
           properties: {
-            location: {
+            wikipedia_page: {
               type: "string",
-              description: "Get wikipedia page for a given question."
+              description: "Wikipedia page URL"
             }
           },
           required: ["wikipedia_page"]
@@ -60,7 +69,8 @@ class FunctionCallAgent {
     return(this.constructor.name);
   }
 
-  async getFunctionCall() {
+  async getFunctionCall(setContent) {
+    setContent("Getting function call..." + this.question)
     const messages = [
       {
         role: 'system',
@@ -72,31 +82,29 @@ class FunctionCallAgent {
       }
     ];
     try {
-      const response = await this.openAIRef.createChatCompletion({
+      const response = await this.openAI.chat.completions.create({
         model: 'gpt-4',
         messages: messages,
         functions: this.functions,
-        function_call: "auto", // Optionally specify which function to call
+        function_call: "auto", 
       });
   
-      const message = response.data.choices[0].message;
-      console.log(message)
+      const message = response.choices[0].message;
       
-      /*
       if (message.function_call) {
         const functionName = message.function_call.name;
-        const functionArgs = JSON.parse(message.function_call.arguments);
+        const functionArgs = message.function_call.arguments; //JSON.parse(message.function_call.arguments);
         
         if (functionName === "Weather") {
-          new WeatherAgent(functionArgs)
+          new WeatherAgent(functionArgs, setContent)
         } else if (functionName === "Location") {
-          new MapAgent(functionArgs)
+          new MapAgent(functionArgs, setContent)
         } else if (functionName === "Wikipedia") {
-          new WikipediaAgent(functionArgs)
+          new WikipediaAgent(functionArgs, setContent)
         }
       } else {
-        console.log(message.content);
-      }*/
+        setContent(message.content);
+      }
     } catch (error) {
       console.error('Error:', error);
     }
@@ -104,19 +112,19 @@ class FunctionCallAgent {
 }
 
 class WeatherAgent {
-  constructor(functionArgs) {
-    console.log(functionArgs);
+  constructor(functionArgs, setContent) {
+    setContent(functionArgs);
   }
 }
 
 class MapAgent {
-  constructor(functionArgs) {
-    console.log(functionArgs);
+  constructor(functionArgs, setContent) {
+    setContent(functionArgs);
   }
 }
 class WikipediaAgent {
-  constructor(functionArgs) {
-    console.log(functionArgs);
+  constructor(functionArgs,setContent) {
+    setContent(functionArgs);
   }
 }
 
@@ -129,7 +137,7 @@ class OrchestratorAgent {
     categories, 
     definitions,
     agentClasses,
-    openAIRef,
+    openAI,
   ) {
     this.promptQueue = promptQueue;
     this.setTestResults = setTestResults;
@@ -138,13 +146,13 @@ class OrchestratorAgent {
     this.categories = categories;
     this.definitions = definitions;
     this.agentClasses = agentClasses;
-    this.openAIRef = openAIRef;
+    this.openAI = openAI;
     this.count = 0;
   }
 
   getFunctionAgent(category, question) {
     if (category in this.agentClasses) {
-      const agent = new FunctionCallAgent(this, question, this.openAIRef)
+      const agent = new FunctionCallAgent(this, question, this.openAI)
       return agent;
     }
     return null;
@@ -164,13 +172,15 @@ class OrchestratorAgent {
 
       if (!matches) matches = msg.match(/[bcdBCD]{1}(?=[\s])/g);
       if (matches) {
-        letter = matches[0];
-        if (matches[0] in this.categories) category = this.categories[matches[0]];
+        letter = matches[0].toLowerCase();
+        if (letter in this.categories) category = this.categories[letter];
       } 
-      const functionAgent = this.getFunctionAgent(category)
+
+      const question = category == 'Weather' ? intentTest.question + " San Francisco, CA" : intentTest.question;
+      const functionAgent = this.getFunctionAgent(category, question)
       const testResult = {
         "id": "test_result_" + this.count++,
-        "question": intentTest.question,
+        "question": question,
         "type": intentTest.type,
         "category": category,
         "isMatch": category == intentTest.type,
@@ -180,7 +190,7 @@ class OrchestratorAgent {
         "prompt": prompt,
         "message": msg,
         "functionAgent": functionAgent,
-        "agentClass": functionAgent ? functionAgent.getAgentClass(intentTest.question) : "",
+        "agentClass": functionAgent ? functionAgent.getAgentClass() : "",
       }
   
       //setTestResults([...testResults, testResult]);
@@ -227,7 +237,7 @@ function SimulationCanvas(props) {
         categories, 
         definitions,
         agentClasses,
-        props.openAIRef,
+        props.openAI,
       )
     );
   }, []);
@@ -259,7 +269,6 @@ function SimulationCanvas(props) {
       setFalsePositives(falsePositivesByCategory);
       
     }
-    console.log(falsePositives)
   }, [testResults]);
   
   return (
@@ -344,7 +353,7 @@ function SimulationCanvas(props) {
           {
             falsePositives && (
               Object.keys(falsePositives).map((category, index) => (
-                <div style={{display:"flex", flexDirection:"row"}}>
+                <div key={"FP_"+index} style={{display:"flex", flexDirection:"row"}}>
                   <div style={{width:"60px"}}>{`${category}`} : </div>
                   <div style={{fontWeight:"600"}}>{`${falsePositives[category].length}`}</div>
                 </div>
@@ -385,7 +394,7 @@ function SimulationCanvas(props) {
                   <div 
                     className="openDrawerLink"
                     onClick={() => {
-                      setDrawerState('partial')
+                      setDrawerState('open')
                       setDrawerTestResultId(result.id);
                     } }
                     style={{cursor:"pointer"}}>

@@ -657,19 +657,18 @@ const intentTests = [
         "type": "People"
     }
 ]
-*/
 
 const intentTests = [
   {
-      "question": "Should I wear a coat tomorrow?",
+      "question": "Who was the first person to step on the moon?",
+      "type": "People"
+  },
+  {
+      "question": "Do I need an umbrella tomorrow in Berkeley, CA?",
       "type": "Weather"
   },
   {
-      "question": "Do I need an umbrella?",
-      "type": "Weather"
-  },
-  {
-      "question": "What’s the weather like this week?",
+      "question": "What’s the weather like this week in Berkeley, CA?",
       "type": "Weather"
   },
   {
@@ -721,6 +720,89 @@ const intentTests = [
       "type": "People"
   },
 ]
+*/
 
+const intentTests = [
+  {
+    "question": "Should I wear a coat tomorrow?",
+    "type": "Weather"
+  },
+  {
+      "question": "Do I need an umbrella?",
+      "type": "Weather"
+  },
+  {
+      "question": "What’s the weather like this week?",
+      "type": "Weather"
+  },
+  {
+      "question": "Is it going to rain today?",
+      "type": "Weather"
+  },
+  {
+      "question": "What’s the temperature right now?",
+      "type": "Weather"
+  },
+  {
+      "question": "Will it snow this weekend?",
+      "type": "Weather"
+  },
+  {
+      "question": "How windy is it outside?",
+      "type": "Weather"
+  },
+  {
+      "question": "Should I take a jacket with me?",
+      "type": "Weather"
+  },
+  {
+      "question": "Is it sunny outside?",
+      "type": "Weather"
+  },
+  {
+      "question": "Will there be a thunderstorm tonight?",
+      "type": "Weather"
+  },
+  {
+    "question": "What are the best places to visit in Japan?",
+    "type": "Location"
+  },
+  {
+    "question": "Where is Mount Everest?",
+    "type": "Location"
+  },
+  {
+    "question": "What is the capital of Australia?",
+    "type": "Location"
+  },
+  {
+    "question": "How do I get to Central Park?",
+    "type": "Location"
+  },
+  {
+    "question": "Where can I find the Statue of Liberty?",
+    "type": "Location"
+  },
+  {
+    "question": "What is the distance between London and Paris?",
+    "type": "Location"
+  },
+  {
+    "question": "Which continent is Egypt in?",
+    "type": "Location"
+  },
+  {
+    "question": "What is the largest city in Canada?",
+    "type": "Location"
+  },
+  {
+    "question": "Where is the Colosseum?",
+    "type": "Location"
+  },
+  {
+    "question": "How far is it from Sydney to Melbourne?",
+    "type": "Location"
+  },
+]
 
 export { categories, intentTests, definitions }
