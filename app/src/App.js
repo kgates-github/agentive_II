@@ -1,9 +1,9 @@
 
-import { useEffect, useState } from 'react';  
+import { useEffect, useState, useRef } from 'react';  
 import getLlmInference from './components/llm_inference';
 import SimulationCanvas from './components/SimulationCanvas';
+import { OpenAI } from 'openai';
 import './App.css';
-
 
 
 class PromptQueue {
@@ -68,6 +68,7 @@ function App() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [llmInference, setLlmInference] = useState(null);
   const [promptQueue, setPromptQueue] = useState(null);
+  const openAIRef = useRef(null);
 
   useEffect(() => {  
     if (promptQueue != null) {
@@ -87,6 +88,14 @@ function App() {
     }).catch(error => {
       console.log(error)
     });
+
+    const openaiApiKey = process.env.REACT_APP_OPENAI_KEY
+
+    if (!openaiApiKey) {
+      console.log('process.env.REACT_APP_OPENAI_KEY', process.env)
+    } else {
+      openAIRef.current = new OpenAI({ apiKey: openaiApiKey, dangerouslyAllowBrowser: true });
+    }
   }, []);
 
 
@@ -95,7 +104,7 @@ function App() {
     (
       <>
         
-        {isLoaded ? <SimulationCanvas promptQueue={promptQueue}/> : null}
+        {isLoaded ? <SimulationCanvas promptQueue={promptQueue} openAIRef={openAIRef}/> : null}
         
         <div className="App">
           {/* LLM Loader */}

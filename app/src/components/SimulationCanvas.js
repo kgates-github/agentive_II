@@ -6,62 +6,117 @@ import TestSummary from './TestSummary';
 import axios from 'axios';
 import { intentTests, categories, definitions } from './helpers';
 
-
 class FunctionCallAgent {
-  constructor() {
-    // Set up properties to connect to GPT
+  constructor(orchestrator, question, openAIRef) {
+    this.orchestrator = orchestrator; // For callbacks
+    this.question = question;
+    this.openAIRef = openAIRef;
+
+    this.functions = [
+      {
+        name: "Weather",
+        description: "Get the current weather for a given location.",
+        parameters: {
+          type: "object",
+          properties: {
+            location: {
+              type: "string",
+              description: "The name of the city to get the weather for."
+            }
+          },
+          required: ["location"]
+        }
+      },{
+        name: "Location",
+        description: "Get location info such as lat lon.",
+        parameters: {
+          type: "object",
+          properties: {
+            location: {
+              type: "string",
+              description: "Location information for a given location."
+            }
+          },
+          required: ["information"]
+        }
+      },{
+        name: "Wikipedia",
+        description: "Get wikipedia page for a given question",
+        parameters: {
+          type: "object",
+          properties: {
+            location: {
+              type: "string",
+              description: "Get wikipedia page for a given question."
+            }
+          },
+          required: ["wikipedia_page"]
+        }
+      }
+    ];
   }
 
-  async getFunctionCall(question) {
-    try {
-      const response = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', {
-        prompt: question,
-        max_tokens: 60
-      }, {
-        headers: {
-          'Authorization': `Bearer YOUR_OPENAI_KEY`,
-          'Content-Type': 'application/json'
-        }
-      });
+  getAgentClass() {
+    return(this.constructor.name);
+  }
 
-      return response.data.choices[0].text.trim();
+  async getFunctionCall() {
+    const messages = [
+      {
+        role: 'system',
+        content: 'You are a helpful assistant.'
+      },
+      {
+        role: 'user',
+        content: this.question,
+      }
+    ];
+    try {
+      const response = await this.openAIRef.createChatCompletion({
+        model: 'gpt-4',
+        messages: messages,
+        functions: this.functions,
+        function_call: "auto", // Optionally specify which function to call
+      });
+  
+      const message = response.data.choices[0].message;
+      console.log(message)
+      
+      /*
+      if (message.function_call) {
+        const functionName = message.function_call.name;
+        const functionArgs = JSON.parse(message.function_call.arguments);
+        
+        if (functionName === "Weather") {
+          new WeatherAgent(functionArgs)
+        } else if (functionName === "Location") {
+          new MapAgent(functionArgs)
+        } else if (functionName === "Wikipedia") {
+          new WikipediaAgent(functionArgs)
+        }
+      } else {
+        console.log(message.content);
+      }*/
     } catch (error) {
-      console.error(error);
+      console.error('Error:', error);
     }
   }
 }
 
-class WeatherAgent extends FunctionCallAgent {
-  constructor() {
-    super();
-  }
-
-  getAgentClass() {
-    return(this.constructor.name);
-  }
-
-  getFunctionCall(question) {
-    return super.getFunctionCall(question);
+class WeatherAgent {
+  constructor(functionArgs) {
+    console.log(functionArgs);
   }
 }
 
-class MapAgent extends FunctionCallAgent {
-  constructor() {
-    super();
-  }
-
-  getAgentClass() {
-    return(this.constructor.name);
+class MapAgent {
+  constructor(functionArgs) {
+    console.log(functionArgs);
   }
 }
-
-class WikipediaAgent extends FunctionCallAgent {
-  constructor() {
-    super();
-  }
-
-  getAgentClass() {
-    return(this.constructor.name);
+class WikipediaAgent {
+  constructor(functionArgs) {
+    console.log(functionArgs);
   }
 }
 
@@ -74,6 +129,7 @@ class OrchestratorAgent {
     categories, 
     definitions,
     agentClasses,
+    openAIRef,
   ) {
     this.promptQueue = promptQueue;
     this.setTestResults = setTestResults;
@@ -82,29 +138,29 @@ class OrchestratorAgent {
     this.categories = categories;
     this.definitions = definitions;
     this.agentClasses = agentClasses;
+    this.openAIRef = openAIRef;
     this.count = 0;
   }
 
-  getFunctionAgent(category) {
+  getFunctionAgent(category, question) {
     if (category in this.agentClasses) {
-      const agent = new this.agentClasses[category](this);
+      const agent = new FunctionCallAgent(this, question, this.openAIRef)
       return agent;
     }
     return null;
   }
   
   routeInput(intentTest) {
-    const prompt = `First, read the following text: ${intentTest.question}
+    const prompt = `# First, read the following text: ${intentTest.question}
     
-    Next, read through all of the categories found below. After that, list the letter of the category that best describes the text. Put the letter in JSON line this {a}. Make sure your answer is no more than 10 words.
+    # Next, read through all of these categories: ${definitions}
     
-    CATEGORIES:
-    ${definitions}`
+    # After that, determine which category describes the text and list the letter. Put the letter in JSON line this {a}. Limit you answer to 15 words or less.`
 
     const callback = (msg, start_time) => {
       let category = "None";
       let letter = "None";
-      let matches = msg.match(/[a-eA-E]{1}(?=[\}\)])/g);
+      let matches = msg.match(/[a-eA-E]{1}(?=[\}\)"])/g);
 
       if (!matches) matches = msg.match(/[bcdBCD]{1}(?=[\s])/g);
       if (matches) {
@@ -118,12 +174,13 @@ class OrchestratorAgent {
         "type": intentTest.type,
         "category": category,
         "isMatch": category == intentTest.type,
+        "isFalsePositive": category != intentTest.type && category != "None",
         "letter": letter,
         "duration": Date.now() - start_time,
         "prompt": prompt,
         "message": msg,
         "functionAgent": functionAgent,
-        "agentClass": functionAgent ? functionAgent.getAgentClass() : "",
+        "agentClass": functionAgent ? functionAgent.getAgentClass(intentTest.question) : "",
       }
   
       //setTestResults([...testResults, testResult]);
@@ -158,6 +215,7 @@ function SimulationCanvas(props) {
   const [drawerTestResultId, setDrawerTestResultId] = useState(null);
   const [drawerState, setDrawerState] = useState('closed');
   const [testResultsByCategory, setTestResultsByCategory] = useState(null)
+  const [falsePositives, setFalsePositives] = useState(null)
   
   useEffect(() => {  
     setOrchestratorAgent(
@@ -169,6 +227,7 @@ function SimulationCanvas(props) {
         categories, 
         definitions,
         agentClasses,
+        props.openAIRef,
       )
     );
   }, []);
@@ -184,8 +243,23 @@ function SimulationCanvas(props) {
         return acc;
       }, {});
   
-      setTestResultsByCategory(categoryResults)
+      setTestResultsByCategory(categoryResults);
+
+      const falsePositiveResults = testResults.filter((result) => result.isFalsePositive);
+      
+      const falsePositivesByCategory = falsePositiveResults.reduce((acc, testResult) => {
+        const { category } = testResult;
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+        acc[category].push(testResult);
+        return acc;
+      }, {});
+
+      setFalsePositives(falsePositivesByCategory);
+      
     }
+    console.log(falsePositives)
   }, [testResults]);
   
   return (
@@ -212,9 +286,6 @@ function SimulationCanvas(props) {
             <div 
               style={{  
                 marginLeft:"36px", 
-                marginRight:"28px",  
-                paddingRight:"36px",           
-                borderRight:"1px solid #ccc",
                 cursor:"pointer",
                 display:"flex",
                 flexDirection:"row",
@@ -237,7 +308,9 @@ function SimulationCanvas(props) {
             </div>
           </div>
 
-          <div style={{width:"200px", paddingRight:"32px", marginRight:"12px", borderRight:"1px solid #ccc",}}>
+          <div style={{width:"1px", height:"60px", background:"#ccc", marginLeft:"32px", marginRight:"32px"}}></div>
+
+          <div style={{width:"200px", alignItems:"center"}}>
             <div style={{color:"#444", position:"relative", bottom:"-3px", fontSize:"12px"}}>
               % Test Batch Completed
             </div>
@@ -251,16 +324,36 @@ function SimulationCanvas(props) {
               {intentTests.length} of {testResults.length}
             </div>
           </div>
-          
-          <TestSummary category={'All Categories'} testResults={testResults}/>
-          
+
+          <div style={{width:"1px", height:"60px", background:"#ccc", marginLeft:"32px", marginRight:"8px"}}></div>
+
+          <div style={{display:"flex", flexDirection:"row", height:"80px", background:"none",}}>
+            <TestSummary category={'All Categories'} testResults={testResults}/>
+            {
+              testResultsByCategory && (
+                Object.keys(testResultsByCategory).map((category, index) => (
+                  <TestSummary key={"TS_"+index} category={category} testResults={testResultsByCategory[category]} />
+                ))
+              )
+            }
+          </div>
+
+          <div style={{width:"1px", height:"60px", background:"#ccc", marginLeft:"32px", marginRight:"32px"}}></div>
+
+          <div style={{display:"flex", flexDirection:"column", fontSize:"12px", lineHeight:"14px"}}>
           {
-            testResultsByCategory && (
-              Object.keys(testResultsByCategory).map((category, index) => (
-                <TestSummary key={index} category={category} testResults={testResultsByCategory[category]} />
+            falsePositives && (
+              Object.keys(falsePositives).map((category, index) => (
+                <div style={{display:"flex", flexDirection:"row"}}>
+                  <div style={{width:"60px"}}>{`${category}`} : </div>
+                  <div style={{fontWeight:"600"}}>{`${falsePositives[category].length}`}</div>
+                </div>
               ))
             )
           }
+          </div>
+
+          
 
         </div>
         
@@ -273,6 +366,7 @@ function SimulationCanvas(props) {
               <td>Type</td>
               <td>LLM Guess</td>
               <td>Match</td>
+              <td>False Positive</td>
               <td>Letter</td>
               <td>Duration</td>
               {/*<td>Message</td>*/}
@@ -304,6 +398,12 @@ function SimulationCanvas(props) {
                   {result.isMatch ?  
                     <i className="material-icons" style={{color: "#999" }}>check</i> : 
                     <i className="material-icons" style={{color: "#E56D6D" }}>error</i>
+                  }
+                </td>
+                <td style={{textAlign:"center", paddingTop:"4px"}}>
+                  {result.isFalsePositive ?  
+                    <i className="material-icons" style={{color: "#E56D6D" }}>error</i> : ""
+                    
                   }
                 </td>
                 <td>{result.letter}</td>
