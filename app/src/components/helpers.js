@@ -12,7 +12,7 @@ b) The text is related to the weather.
 c) The text is related to people.
 d) The text is not related to location or the weather or people.`
 
-/*
+
 const intentTests = [
     {
         "question": "Should I wear a coat tomorrow?",
@@ -658,17 +658,18 @@ const intentTests = [
     }
 ]
 
+/*
 const intentTests = [
   {
       "question": "Who was the first person to step on the moon?",
       "type": "People"
   },
   {
-      "question": "Do I need an umbrella tomorrow in Berkeley, CA?",
+      "question": "Do I need an umbrella tomorrow",
       "type": "Weather"
   },
   {
-      "question": "What’s the weather like this week in Berkeley, CA?",
+      "question": "What’s the weather like this week?",
       "type": "Weather"
   },
   {
@@ -720,7 +721,7 @@ const intentTests = [
       "type": "People"
   },
 ]
-*/
+
 
 const intentTests = [
   {
@@ -804,5 +805,7 @@ const intentTests = [
     "type": "Location"
   },
 ]
+*/
+
 
 export { categories, intentTests, definitions }

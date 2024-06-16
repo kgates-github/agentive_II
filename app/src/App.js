@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react';  
 import getLlmInference from './components/llm_inference';
 import SimulationCanvas from './components/SimulationCanvas';
+import TestWindow from './components/TestWindow';
 import { OpenAI } from 'openai';
 import './App.css';
 
@@ -104,7 +105,8 @@ function App() {
     (
       <>
         
-        {isLoaded ? <SimulationCanvas promptQueue={promptQueue} openAI={openAI}/> : null}
+        {isLoaded ? <TestWindow promptQueue={promptQueue} openAI={openAI}/> : null}
+        {/*isLoaded ? <SimulationCanvas promptQueue={promptQueue} openAI={openAI}/> : null*/}
         
         <div className="App">
           {/* LLM Loader */}

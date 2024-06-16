@@ -16,24 +16,20 @@ class FunctionCallAgent {
     this.functions = [
       {
         name: "Weather",
-        description: "Get the current weather for a given location.",
+        description: "Get the location and timeframe, for a weather forecast",
         parameters: {
           type: "object",
           properties: {
             location: {
               type: "string",
-              description: "The location and timeframe for a weather forecast."
+              description: "The location for the weather forecast."
             },
-            start: {
-              type: "string",
-              description: "Start date (yyyy-mm-dd hh)",
+            num_days: {
+              type: "integer",
+              description: "Give a timeframe based on the user input in days",
             },
-            end: {
-              type: "string",
-              description: "End time (yyyy-mm-dd hh)",
-            }
           },
-          required: ["location", "start", "end"]
+          required: ["location", "num_days",]
         }
       },{
         name: "Location",
@@ -69,8 +65,10 @@ class FunctionCallAgent {
     return(this.constructor.name);
   }
 
-  async getFunctionCall(setContent) {
-    setContent("Getting function call..." + this.question)
+  async getFunctionCall(updateContent) {
+    updateContent(this.question);
+    updateContent("Making function call...");
+    
     const messages = [
       {
         role: 'system',
@@ -95,15 +93,24 @@ class FunctionCallAgent {
         const functionName = message.function_call.name;
         const functionArgs = message.function_call.arguments; //JSON.parse(message.function_call.arguments);
         
+        updateContent(functionArgs);
         if (functionName === "Weather") {
-          new WeatherAgent(functionArgs, setContent)
+          new WeatherAgent(functionArgs)
         } else if (functionName === "Location") {
-          new MapAgent(functionArgs, setContent)
+          new MapAgent(functionArgs)
         } else if (functionName === "Wikipedia") {
-          new WikipediaAgent(functionArgs, setContent)
+          new WikipediaAgent(functionArgs)
         }
       } else {
-        setContent(message.content);
+        updateContent(message.content);
+        updateContent((
+          <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
+            <input type="text" placeholder="Enter some text" />
+            
+            <i className="material-icons" style={{color: "#999", fontSize:"32px" }}>arrow_circle_right</i>
+           
+          </div>
+        ));
       }
     } catch (error) {
       console.error('Error:', error);
@@ -112,19 +119,19 @@ class FunctionCallAgent {
 }
 
 class WeatherAgent {
-  constructor(functionArgs, setContent) {
-    setContent(functionArgs);
+  constructor(functionArgs) {
+    //setContent([...content, functionArgs])
   }
 }
 
 class MapAgent {
-  constructor(functionArgs, setContent) {
-    setContent(functionArgs);
+  constructor(functionArgs) {
+    //setContent([...content, functionArgs])
   }
 }
 class WikipediaAgent {
-  constructor(functionArgs,setContent) {
-    setContent(functionArgs);
+  constructor(functionArgs) {
+    //setContent([...content, functionArgs])
   }
 }
 
@@ -176,11 +183,12 @@ class OrchestratorAgent {
         if (letter in this.categories) category = this.categories[letter];
       } 
 
-      const question = category == 'Weather' ? intentTest.question + " San Francisco, CA" : intentTest.question;
-      const functionAgent = this.getFunctionAgent(category, question)
+      //const question = category == 'Weather' ? intentTest.question + " San Francisco, CA" : intentTest.question;
+      const functionAgent = new FunctionCallAgent(this, intentTest.question, this.openAI);
+      
       const testResult = {
         "id": "test_result_" + this.count++,
-        "question": question,
+        "question": intentTest.question,
         "type": intentTest.type,
         "category": category,
         "isMatch": category == intentTest.type,
@@ -372,7 +380,7 @@ function SimulationCanvas(props) {
             <tr className="tr_header">
               <td>#</td>
               <td>Question</td>
-              <td>Type</td>
+              <td>Label</td>
               <td>LLM Guess</td>
               <td>Match</td>
               <td>False Positive</td>

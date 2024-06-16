@@ -1,21 +1,40 @@
 
 html, body {
   margin: 0;
-  padding: 0;
+  padding-left: 6px;
+  padding-right: 8px;
+  overflow: hidden;
+  font-size:12px !important;
+}
+
+li {
+  margin-bottom:20px;
+}
+
+input {
+  height:24px;
+  width:250px;
+  margin-right:8px;
 }
 
 .testTable {
   width: 100%;
-  margin-top: 12px;
+  overflow-y: auto;
 }
 
 .testTable .tr_header {
   padding-left: 12px;
   padding-right: 12px;
-  height: 36px;
+  height: 32px;
   background: #e6e6e6;
   color:#000;
   line-height: 14px;
+}
+
+.testTable thead tr {
+  position: sticky;
+  top: 0;
+  background: white; /* This is to ensure the header is not transparent */
 }
 
 .testTable .tr_header td {
@@ -30,7 +49,7 @@ html, body {
 .testTable .tr_data td {
   padding-left: 12px;
   padding-right: 12px;
-  height: 36px;
+  height: 32px;
   background: #f4f4f4;
 }
 
@@ -75,7 +94,7 @@ button {
   display: flex; 
   justify-content: center;
   font-family: "Source Sans Pro", sans-serif;
-  font-size:16px;
+  font-size:12px;
   background-color: none;
   overflow-y: hidden;
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import '../App.css';
 import './SimulationCanvas.css';
 import { motion } from "framer-motion"
@@ -6,8 +6,9 @@ import { motion } from "framer-motion"
 
 function SimulationDrawer(props) {
   const [testResult, setTestResult] = useState(false);
-  const [content, setContent] = useState(null);
+  const [content, setContent] = useState([]);
   const [curTab, setCurTab] = useState("simulation");
+  const contentRef = useRef(content);
 
   // Variants
   const variants = {
@@ -23,16 +24,20 @@ function SimulationDrawer(props) {
       transition: { duration: 0.3, ease: 'easeInOut' }
     },
     closed: {
-      x: 800,
+      x: 600,
       transition: { duration: 0.3, ease: 'easeInOut', }
     }
+  }
+
+  const updateContent = (newContent) => {
+    setContent(prevContent => [...prevContent, newContent]);
   }
   
   useEffect(() => {  
     if (props.drawerTestResultId) {
       const result = props.testResults.find(result => result.id === props.drawerTestResultId);
       setTestResult(result);
-      setContent("")
+      setContent([])
     }
   }, [props.drawerTestResultId]);
   
@@ -44,7 +49,7 @@ function SimulationDrawer(props) {
       style={{
         position:"fixed",
         right:"0px",
-        width:"800px",
+        width:"600px",
         height:"100%", 
         background:"#fff",
         borderLeft: "1px solid #888",
@@ -63,7 +68,7 @@ function SimulationDrawer(props) {
         paddingTop:"20px",
         paddingLeft:"32px",
         paddingRight:"32px",
-        paddingBottom:"32px",
+        paddingBottom:"44px",
       }}
       >
         {/* HEADER */}
@@ -123,7 +128,7 @@ function SimulationDrawer(props) {
 
         {/* SIMULATION */}
         <div style={{
-          marginTop:"40px",
+          marginTop:"16px",
           marginLeft:"0px",
           border: "3px solid white",
           display: curTab == 'simulation' ? "flex" : "none" ,
@@ -133,7 +138,7 @@ function SimulationDrawer(props) {
             style={{  
               marginLeft:"0px", 
               marginRight:"28px",  
-              paddingRight:"36px",           
+              paddingRight:"0px",           
               display:"flex",
               flexDirection:"column",
               alignItems:"flex-start",
@@ -141,21 +146,28 @@ function SimulationDrawer(props) {
             }}
           >
             <div style={{marginTop:"12px",}}>
-              <div onClick={() => {testResult.functionAgent.getFunctionCall(setContent)}}  
+              <div onClick={() => {testResult.functionAgent.getFunctionCall(updateContent)}}  
                 style={{ cursor:"pointer",}}>
                 <i className="material-icons" style={{color: "#777", fontSize:"36px" }}>play_circle</i> 
               </div>
               <div style={{marginTop:"-5px", color:"#444", fontSize:"12px", width:"40px", textAlign:"center"}}>Start</div>
             </div>
             <div onClick={() => {}} style={{marginTop:"12px",}}>
-              <div onClick={() => {testResult.functionAgent.getFunctionCall(setContent)}}  
+              <div onClick={() => {setContent([])}}  
                 style={{ cursor:"pointer",}}>
                 <i className="material-icons" style={{color: "#777", fontSize:"36px" }}>replay</i> 
               </div>
               <div style={{marginTop:"-5px", color:"#444", fontSize:"12px", width:"40px", textAlign:"center"}}>Reset</div> 
             </div>
           </div>
-          {content}
+          
+          <ol style={{display:"flex", flexDirection:"column"}}>
+            {Array.isArray(content) && content.map((item, index) => (
+              <li key={"content_"+index}>
+                {item}
+              </li>
+            ))}
+          </ol>
           
         {/* END MAIN */}
         </div>
