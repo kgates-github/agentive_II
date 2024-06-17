@@ -1,12 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from "framer-motion"
-import PanelHeader from './PanelHeader.js'
+import DetailsHeader from './DetailsHeader.js'
+import DetailsBody from './DetailsBody.js'
 import '../App.css';
 import './SimulationCanvas.css';
 
 
 function Overlay(props) {
   const leftGap = 250;
+  const [detailsIsOpen, setDetailsIsOpen] = useState(false)
+  const [detailsIsExpanded, setDetailsIsExpanded] = useState(false)
+  const [detailsWidth, setDetailsWidth] = useState(400)
+  
 
   // Variants
   const variants = {
@@ -38,7 +43,7 @@ function Overlay(props) {
     style={{
       position:"absolute", bottom:"12px", right:"16px", top:"36px", left:"240px",
       background:"none", display:"flex", flexDirection:"column", overflow:"hidden",
-      borderBottom:"1px solid #ccc"
+      borderBottom:"1px solid #ccc", borderRight:"1px solid #ccc", 
     }}>
       {/* HEAD */}
       <div style={{
@@ -64,15 +69,25 @@ function Overlay(props) {
           <div style={{flex:"1",}}></div>
         </div>
 
-        <PanelHeader name="Agent Inspector" width={300}/>
-        <PanelHeader name="Human Experience" width={300}/>
+        
+          <DetailsHeader 
+            key={"details_header"} 
+            name={"Details"}
+            detailsWidth={detailsWidth}
+            setDetailsWidth={setDetailsWidth}
+            detailsIsOpen={detailsIsOpen} 
+            setDetailsIsOpen={setDetailsIsOpen}
+            detailsIsExpanded={detailsIsExpanded}
+            setDetailsIsExpanded={setDetailsIsExpanded}
+          />
+        
 
       </div>
       
       {/* OVERLAY BODY */}
       <div style={{
         borderLeft:"1px solid #ccc",
-        flex:1, overflowY:"scroll", 
+        flex:1, overFlow:"hidden",
         background:"white", display:"flex", flexDirection:"row",
       }}>
         <div style={{
@@ -95,28 +110,14 @@ function Overlay(props) {
           </div>
         </div>
 
-        <div style={{ 
-          display: 'flex',
-          height: '100vh',
-          borderLeft:"1px solid #ccc", 
-          width:"none",
-          flex:"1",
-          background:"none"
-        }}>
-          <div style={{padding:"12px"}}>Agent Inspector</div>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          height: '100vh',
-          borderLeft:"1px solid #ccc", 
-          width:"300px",
-          flex:"none",
-          background:"none"
-        }}>
-          <div style={{padding:"12px"}}>Human Experience</div>
-        </div>
-        
+       
+        <DetailsBody 
+          key={"detail_body"} 
+          name={"Details"} 
+          detailsWidth={detailsWidth} 
+          detailsIsOpen={detailsIsOpen}
+          detailsIsExpanded={detailsIsExpanded}
+        />
       </div>
       {/* END OVERLAY BODY */}
     </motion.div>

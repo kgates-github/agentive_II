@@ -3,30 +3,40 @@ import '../App.css';
 import './SimulationCanvas.css';
 
 
-function PanelHeader(props) {
-  let baseWidth = 0;
-  const tabRef = useRef();
+function DetailsHeader(props) {
+  
+  function toggleIsOpen() {
+    props.setDetailsIsOpen(!props.detailsIsOpen)
+  }
+
+  function toggleIsExpanded() {
+    props.setDetailsIsExpanded(!props.detailsIsExpanded)
+  }
 
   function getWidth() {
-    if (props.data.isOpen) {
-      let newWidth = 0
-      if (props.data.isExpanded) newWidth = props.data.widthLarge;
-      newWidth = props.data.widthSmall;
-      const offset = props.getOffset(props.index)
+    if (props.detailsIsOpen) {
+      return (props.detailsIsExpanded) ? null : props.detailsWidth;
     }
     return null;
   }
 
+  function getFlex() {
+    if (props.detailsIsOpen) {
+      return (props.detailsIsExpanded) ? '1' : null;
+    }
+    return null;
+  }
+   
+
   useEffect(() => { 
-    baseWidth = tabRef.current.offsetWidth;
-    console.log('baseWidth', tabRef.current.offsetWidth)
+    
   }, []);
    
 
-  
   return (
-    <div ref={tabRef} style={{
+    <div style={{
       display: 'flex',
+      flex: getFlex(),
       flexDirection: "row",
       alignItems: 'center',
       height: '100vh',
@@ -34,17 +44,17 @@ function PanelHeader(props) {
       width: getWidth(),
     }}>
       <div style={{marginLeft:"12px", marginRight:"12px", cursor:"pointer"}} 
-        onClick={() => props.upDatePanelsData(props.index, "isOpen")}>
-          {props.data.name}
+        onClick={toggleIsOpen}>
+          {props.name}
       </div>
-      {props.data.isOpen ? (
+      {props.detailsIsOpen ? (
         <>
           <div style={{flex:"1"}}></div>
-          <div style={{marginLeft:"12px", cursor:"pointer"}} onClick={() => props.upDatePanelsData(props.index, "isExpanded")}>
+          <div style={{marginLeft:"12px", cursor:"pointer"}} onClick={toggleIsExpanded}>
             <i className="material-icons" style={{color: "#ddd", fontSize:"20px", lineHeight:"36px",}}>open_in_full</i> 
           </div>
           <div style={{marginLeft:"12px", marginRight:"12px", cursor:"pointer"}} 
-            onClick={() => props.upDatePanelsData(props.index, "isOpen")}>
+            onClick={toggleIsOpen}>
             <i className="material-icons" style={{color: "#fff", fontSize:"20px", lineHeight:"28px"}}>close</i> 
           </div>
         </>
@@ -54,7 +64,7 @@ function PanelHeader(props) {
   );
 }
 
-export default PanelHeader;
+export default DetailsHeader;
 
 
 
