@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { motion } from "framer-motion"
 import '../App.css';
 import './SimulationCanvas.css';
 
@@ -34,7 +35,8 @@ function DetailsHeader(props) {
    
 
   return (
-    <div style={{
+    <div 
+    style={{
       display: 'flex',
       flex: getFlex(),
       flexDirection: "row",

@@ -7,11 +7,15 @@ import './SimulationCanvas.css';
 
 
 function Overlay(props) {
-  const leftGap = 250;
+  const [leftGap, setLeftGap] = useState(400)
   const [detailsIsOpen, setDetailsIsOpen] = useState(false)
   const [detailsIsExpanded, setDetailsIsExpanded] = useState(false)
   const [detailsWidth, setDetailsWidth] = useState(400)
   
+  function toggleMain() {
+    if (leftGap == 12) setLeftGap(400);
+    else setLeftGap(12)
+  }
 
   // Variants
   const variants = {
@@ -67,6 +71,9 @@ function Overlay(props) {
             Simulation
           </div>
           <div style={{flex:"1",}}></div>
+          <div style={{marginLeft:"12px", marginRight:"12px", cursor:"pointer"}} onClick={() => toggleMain()}>
+            <i className="material-icons" style={{color: "#ddd", fontSize:"20px", lineHeight:"36px",}}>open_in_full</i> 
+          </div>
         </div>
 
         
@@ -99,6 +106,23 @@ function Overlay(props) {
           background:"none"
         }}>
           <div style={{
+            height:"60px", width:"90px", display:"flex", flexDirection:"row",
+            background:"#fff", paddingLeft:"0px", alignItems:"center",
+            paddingLeft:"16px", background:"none",
+          }}>
+            <div style={{
+              border:'1px solid #BEBEBE', width:"28px", height:"28px", 
+              borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
+              <i className="material-icons" style={{color: "#555", fontSize:"15px", lineHeight:"28px"}}>play_arrow</i> 
+            </div>
+            <div style={{
+              border:'1px solid #BEBEBE', width:"28px", height:"28px", marginLeft:"8px",
+              borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
+              <i className="material-icons" style={{color: "#555", fontSize:"16px", lineHeight:"28px"}}>restart_alt</i> 
+            </div>
+            <div style={{flex:1}}></div>
+          </div>
+          <div style={{
             flex:1,
             padding:"12px", 
             textTransform:"uppercase", 
@@ -108,6 +132,11 @@ function Overlay(props) {
           }}>
               Should I wear a coat tomorrow?
           </div>
+          <div style={{
+            height:"60px", width:"90px", display:"flex", flexDirection:"row",
+            background:"#fff", paddingLeft:"0px", alignItems:"center",
+            paddingLeft:"16px", background:"none",
+          }}></div>
         </div>
 
        
