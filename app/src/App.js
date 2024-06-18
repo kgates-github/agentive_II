@@ -1,7 +1,7 @@
 
 import { useEffect, useState, useRef } from 'react';  
 import getLlmInference from './components/llm_inference';
-import SimulationCanvas from './components/SimulationCanvas';
+//import SimulationCanvas from './components/SimulationCanvas';
 import TestWindow from './components/TestWindow';
 import { OpenAI } from 'openai';
 import './App.css';
@@ -12,10 +12,20 @@ class PromptQueue {
     this.llmInference = llmInference;
     this.queue = [];
     this.isRunning = false;
+    this.isPaused = false;
   }
 
   clearQueue() {
     this.queue = [];
+  }
+
+  pauseQueue() {
+    this.isPaused = true;
+  }
+
+  unpauseQueue() {
+    this.isPaused = false;
+    this.processQueue();
   }
 
   addPromptRequest(prompt, callback) {
@@ -50,7 +60,7 @@ class PromptQueue {
   }
 
   processQueue() {
-    if (!this.isRunning && this.queue.length > 0) {
+    if (!this.isRunning && this.queue.length > 0 && !this.isPaused) {
       this.isRunning = true;
       const promptRequest = this.queue.shift();
       promptRequest['start_time'] = Date.now();

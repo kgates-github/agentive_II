@@ -52,9 +52,9 @@ function DetailsHeader(props) {
       {props.detailsIsOpen ? (
         <>
           <div style={{flex:"1"}}></div>
-          <div style={{marginLeft:"12px", cursor:"pointer"}} onClick={toggleIsExpanded}>
+          {/*<div style={{marginLeft:"12px", cursor:"pointer"}} onClick={toggleIsExpanded}>
             <i className="material-icons" style={{color: "#ddd", fontSize:"20px", lineHeight:"36px",}}>open_in_full</i> 
-          </div>
+          </div>*/}
           <div style={{marginLeft:"12px", marginRight:"12px", cursor:"pointer"}} 
             onClick={toggleIsOpen}>
             <i className="material-icons" style={{color: "#fff", fontSize:"20px", lineHeight:"28px"}}>close</i> 

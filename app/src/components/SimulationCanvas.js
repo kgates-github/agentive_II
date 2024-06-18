@@ -3,7 +3,7 @@ import '../App.css';
 import './SimulationCanvas.css';
 import SimulationDrawer from './SimulationDrawer';
 import TestSummary from './TestSummary';
-import axios from 'axios';
+//import axios from 'axios';
 import { intentTests, categories, definitions } from './helpers';
 
 class FunctionCallAgent {
@@ -404,7 +404,7 @@ function SimulationCanvas(props) {
                     onClick={() => {
                       setDrawerState('open')
                       setDrawerTestResultId(result.id);
-                    } }
+                    }}
                     style={{cursor:"pointer"}}>
                     {result.question}
                   </div>
@@ -420,7 +420,6 @@ function SimulationCanvas(props) {
                 <td style={{textAlign:"center", paddingTop:"4px"}}>
                   {result.isFalsePositive ?  
                     <i className="material-icons" style={{color: "#E56D6D" }}>error</i> : ""
-                    
                   }
                 </td>
                 <td>{result.letter}</td>

@@ -7,13 +7,18 @@ import './SimulationCanvas.css';
 
 
 function Overlay(props) {
-  const [leftGap, setLeftGap] = useState(400)
+  const [leftGap, setLeftGap] = useState(window.innerWidth / 3)
   const [detailsIsOpen, setDetailsIsOpen] = useState(false)
   const [detailsIsExpanded, setDetailsIsExpanded] = useState(false)
   const [detailsWidth, setDetailsWidth] = useState(400)
+
+  const [testResult, setTestResult] = useState(false);
+  const [content, setContent] = useState([]);
+  const [curTab, setCurTab] = useState("simulation");
+  const contentRef = useRef(content);
   
   function toggleMain() {
-    if (leftGap == 12) setLeftGap(400);
+    if (leftGap == 12) setLeftGap(window.innerWidth / 3);
     else setLeftGap(12)
   }
 
@@ -35,9 +40,18 @@ function Overlay(props) {
     },
   }
 
-  useEffect(() => { 
-   
-  }, []);
+  const updateContent = (newContent) => {
+    setContent(prevContent => [...prevContent, newContent]);
+  }
+  
+  useEffect(() => {  
+    if (props.overlayTestResultId) {
+      const result = props.testResults.find(result => result.id === props.overlayTestResultId);
+      console.log(result)
+      setTestResult(result);
+      setContent([])
+    }
+  }, [props.overlayTestResultId]);
   
   return (
     <motion.div 
@@ -55,7 +69,7 @@ function Overlay(props) {
         height:"36px", display:"flex", flexDirection:"row",
         background:"#757575", alignItems:"center", color:"#fff"}}
       >
-         <div style={{ 
+        <div style={{ 
           display: 'flex',
           flexDirection: "row",
           alignItems: 'center',
@@ -63,32 +77,31 @@ function Overlay(props) {
           width:"none",
           flex:"1",
         }}>
-          <div style={{marginLeft:"10px", cursor:"pointer"}} onClick={() => props.setOverlayState("closed")}>
-            <i className="material-icons" style={{
-              color: "#fff", fontSize:"20px", lineHeight:"36px"}}>keyboard_tab</i> 
+          <div className="tab-control" style={{marginLeft:"10px", cursor:"pointer"}} onClick={() => props.setOverlayState("closed")}>
+            <i className="material-icons" style={{color: "#ddd", fontSize:"24px", lineHeight:"36px",}}>arrow_circle_right</i>  
           </div>
           <div style={{marginLeft:"12px", lineHeight:"36px",}}>
             Simulation
           </div>
           <div style={{flex:"1",}}></div>
-          <div style={{marginLeft:"12px", marginRight:"12px", cursor:"pointer"}} onClick={() => toggleMain()}>
-            <i className="material-icons" style={{color: "#ddd", fontSize:"20px", lineHeight:"36px",}}>open_in_full</i> 
-          </div>
+          <div className="tab-control" style={{marginLeft:"12px", marginRight:"12px", cursor:"pointer"}} onClick={() => toggleMain()}>
+            { leftGap == 12 ? 
+              (<i className="material-icons" style={{color: "#ddd", fontSize:"20px", lineHeight:"36px",}}>close_fullscreen</i> )
+              :
+              (<i className="material-icons" style={{color: "#ddd", fontSize:"20px", lineHeight:"36px",}}>open_in_full</i> )
+            }
+          </div>   
         </div>
-
-        
-          <DetailsHeader 
-            key={"details_header"} 
-            name={"Details"}
-            detailsWidth={detailsWidth}
-            setDetailsWidth={setDetailsWidth}
-            detailsIsOpen={detailsIsOpen} 
-            setDetailsIsOpen={setDetailsIsOpen}
-            detailsIsExpanded={detailsIsExpanded}
-            setDetailsIsExpanded={setDetailsIsExpanded}
-          />
-        
-
+        <DetailsHeader 
+          key={"details_header"} 
+          name={"Details"}
+          detailsWidth={detailsWidth}
+          setDetailsWidth={setDetailsWidth}
+          detailsIsOpen={detailsIsOpen} 
+          setDetailsIsOpen={setDetailsIsOpen}
+          detailsIsExpanded={detailsIsExpanded}
+          setDetailsIsExpanded={setDetailsIsExpanded}
+        />
       </div>
       
       {/* OVERLAY BODY */}
@@ -96,50 +109,71 @@ function Overlay(props) {
         borderLeft:"1px solid #ccc",
         flex:1, overFlow:"hidden",
         background:"white", display:"flex", flexDirection:"row",
-      }}>
+      }}> 
         <div style={{
           display: 'flex',
-          height: '100vh',
-          borderLeft:"0px solid #ccc", 
           width:"none",
           flex:"1",
-          background:"none"
-        }}>
+          background:"none",
+          flexDirection:"column"}}>
           <div style={{
-            height:"60px", width:"90px", display:"flex", flexDirection:"row",
-            background:"#fff", paddingLeft:"0px", alignItems:"center",
-            paddingLeft:"16px", background:"none",
-          }}>
-            <div style={{
-              border:'1px solid #BEBEBE', width:"28px", height:"28px", 
-              borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
-              <i className="material-icons" style={{color: "#555", fontSize:"15px", lineHeight:"28px"}}>play_arrow</i> 
-            </div>
-            <div style={{
-              border:'1px solid #BEBEBE', width:"28px", height:"28px", marginLeft:"8px",
-              borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
-              <i className="material-icons" style={{color: "#555", fontSize:"16px", lineHeight:"28px"}}>restart_alt</i> 
-            </div>
-            <div style={{flex:1}}></div>
+              display: 'flex',
+              width:"none",
+              background:"none"
+            }}>
+              <div style={{
+                height:"60px", width:"90px", display:"flex", flexDirection:"row",
+                background:"#fff", alignItems:"center",
+                paddingLeft:"16px", background:"none",
+              }}>
+                <div 
+                onClick={() => {testResult.functionAgent.getFunctionCall(updateContent)}} 
+                style={{
+                  border:'1px solid #BEBEBE', width:"28px", height:"28px", cursor:"pointer",
+                  borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
+                  <i className="material-icons" style={{color: "#555", fontSize:"15px", lineHeight:"28px"}}>play_arrow</i> 
+                </div>
+                <div 
+                onClick={() => {setContent([])}} 
+                style={{
+                  border:'1px solid #BEBEBE', width:"28px", height:"28px", marginLeft:"8px",
+                  borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
+                  <i className="material-icons" style={{color: "#555", fontSize:"16px", lineHeight:"28px"}}>restart_alt</i> 
+                </div>
+                <div style={{flex:1}}></div>
+              </div>
+              <div style={{
+                flex:1,
+                padding:"12px", 
+                textTransform:"uppercase", 
+                fontWeight:"500",
+                textAlign: "center",
+                alignItems: 'center',
+              }}>
+                {testResult.question}
+              </div>
+              <div style={{
+                height:"60px", width:"90px", display:"flex",
+                background:"#fff", paddingLeft:"0px", alignItems:"center",
+                paddingLeft:"16px", background:"none",
+              }}></div>
           </div>
-          <div style={{
-            flex:1,
-            padding:"12px", 
-            textTransform:"uppercase", 
-            fontWeight:"600",
-            textAlign: "center",
-            alignItems: 'center',
+          {/* SIMULATION RESULTS */}
+           <div style={{
+            marginTop:"16px",
+            marginLeft:"0px",
+            marginRight:"16px"
           }}>
-              Should I wear a coat tomorrow?
+            <ol style={{display:"flex", flexDirection:"column"}}>
+              {Array.isArray(content) && content.map((item, index) => (
+                <li key={"content_"+index}>
+                  {item}
+                </li>
+              ))}
+            </ol>
           </div>
-          <div style={{
-            height:"60px", width:"90px", display:"flex", flexDirection:"row",
-            background:"#fff", paddingLeft:"0px", alignItems:"center",
-            paddingLeft:"16px", background:"none",
-          }}></div>
+          {/* END SIMULATION */}
         </div>
-
-       
         <DetailsBody 
           key={"detail_body"} 
           name={"Details"} 
