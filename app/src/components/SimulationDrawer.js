@@ -169,7 +169,7 @@ function SimulationDrawer(props) {
             ))}
           </ol>
           
-        {/* END MAIN */}
+        {/* END SIMULATION */}
         </div>
 
         {/* DETAILS */}

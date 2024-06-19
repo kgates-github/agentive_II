@@ -344,7 +344,7 @@ function SimulationCanvas(props) {
 
           <div style={{width:"1px", height:"60px", background:"#ccc", marginLeft:"32px", marginRight:"8px"}}></div>
 
-          <div style={{display:"flex", flexDirection:"row", height:"80px", background:"none",}}>
+          <div style={{background:"none",}}>
             <TestSummary category={'All Categories'} testResults={testResults}/>
             {
               testResultsByCategory && (

@@ -12,7 +12,7 @@ b) The text is related to the weather.
 c) The text is related to people.
 d) The text is not related to location or the weather or people.`
 
-
+/*
 const intentTests = [
     {
         "question": "Should I wear a coat tomorrow?",
@@ -658,7 +658,7 @@ const intentTests = [
     }
 ]
 
-/*
+
 const intentTests = [
   {
       "question": "Who was the first person to step on the moon?",
@@ -720,7 +720,7 @@ const intentTests = [
       "question": "Who wrote 'Romeo and Juliet'?",
       "type": "People"
   },
-]
+]*/
 
 
 const intentTests = [
@@ -804,8 +804,55 @@ const intentTests = [
     "question": "How far is it from Sydney to Melbourne?",
     "type": "Location"
   },
+  {
+    "question": "What are some accomplishments of Ada Lovelace?",
+    "type": "People"
+  },
+  {
+      "question": "What is Elon Musk known for?",
+      "type": "People"
+  },
+  {
+      "question": "Who is the CEO of Amazon?",
+      "type": "People"
+  },
+  {
+      "question": "What is Barack Obama famous for?",
+      "type": "People"
+  },
+  {
+      "question": "Who is Serena Williams?",
+      "type": "People"
+  },
+  {
+      "question": "What are some famous works of Vincent van Gogh?",
+      "type": "People"
+  },
+  {
+      "question": "Who was Marie Curie?",
+      "type": "People"
+  },
+  {
+      "question": "What did Nikola Tesla invent?",
+      "type": "People"
+  },
+  {
+      "question": "Who is known as the father of computer science?",
+      "type": "People"
+  },
+  {
+      "question": "What did Thomas Edison invent?",
+      "type": "People"
+  },
+  {
+      "question": "Who is Oprah Winfrey?",
+      "type": "People"
+  },
+  {
+      "question": "What is Mark Zuckerberg known for?",
+      "type": "People"
+  },
 ]
-*/
 
 
 export { categories, intentTests, definitions }
