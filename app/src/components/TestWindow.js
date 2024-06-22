@@ -4,13 +4,14 @@ import './SimulationCanvas.css';
 import Overlay from './Overlay';
 import TestSummary from './TestSummary';
 import { intentTests, categories, definitions } from './helpers';
+import { motion } from "framer-motion"
 
 class FunctionCallAgent {
   constructor(orchestrator, question, openAI) {
     this.orchestrator = orchestrator; // For callbacks
     this.question = question;
     this.openAI = openAI;
-    this.function_call = "Wikipedia"
+    this.function_call = "Wikipedia";
 
     this.functions = [
       {
@@ -64,7 +65,7 @@ class FunctionCallAgent {
     return(this.constructor.name);
   }
 
-  async getFunctionCall(updateContent) {
+  async getFunctionCall(updateContent, promptQueue) {
     updateContent(this.question);
     updateContent("Making function call...");
     
@@ -78,6 +79,7 @@ class FunctionCallAgent {
         content: this.question,
       }
     ];
+    
     try {
       const response = await this.openAI.chat.completions.create({
         model: 'gpt-4',
@@ -92,22 +94,21 @@ class FunctionCallAgent {
         const functionName = message.function_call.name;
         const functionArgs = message.function_call.arguments; //JSON.parse(message.function_call.arguments);
         
-        updateContent(functionArgs);
         if (functionName === "Weather") {
           new WeatherAgent(functionArgs)
         } else if (functionName === "Location") {
           new MapAgent(functionArgs)
         } else if (functionName === "Wikipedia") {
-          new WikipediaAgent(functionArgs)
+          new WikipediaAgent(functionArgs, updateContent, promptQueue, this.question)
         }
       } else {
         updateContent(message.content);
         updateContent((
           <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
             <input type="text" placeholder="Enter some text" />
-            
-            <i className="material-icons" style={{color: "#999", fontSize:"24px"}}>arrow_circle_right</i>
-           
+            <i className="material-icons" style={{color: "#999", fontSize:"24px"}}>
+              arrow_circle_right
+            </i>
           </div>
         ));
       }
@@ -130,8 +131,37 @@ class MapAgent {
 }
 
 class WikipediaAgent {
-  constructor(functionArgs) {
-    //setContent([...content, functionArgs])
+  constructor(functionArgs, updateContent, promptQueue, question) {
+    updateContent("Function type: Wikipedia")
+    const argsJSON = JSON.parse(functionArgs)
+    const wikiPage = argsJSON["wikipedia_page"]
+    updateContent((<a href={`https://en.wikipedia.org/wiki/${wikiPage}`} target="blank">{wikiPage}</a>))
+
+    const fetchSummary = async () => {
+      try {
+        updateContent("Fetching wikipedia summary: " + wikiPage)
+        const response = await fetch(
+          `https://en.wikipedia.org/api/rest_v1/page/summary/${wikiPage}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error fetching data: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        updateContent("Wikipedia summary: " + data.extract);
+
+        const prompt = `GIVEN: "${data.extract}" ANSWER: "${question}"`
+        updateContent("Prompt: " + prompt);
+
+        const callback = (msg, timestamp) => {updateContent(msg)}
+        promptQueue.addPromptRequest(prompt, callback) 
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+
+    fetchSummary()
   }
 }
 
@@ -245,27 +275,24 @@ function TestWindow(props) {
   const [orchestratorAgent, setOrchestratorAgent] = useState(null);
   const [testResults, setTestResults] = useState([]);
   const testResultsRef = useRef(testResults);
-  
   const [testResultsByCategory, setTestResultsByCategory] = useState(null)
   const [falsePositives, setFalsePositives] = useState(null)
+  const [analyticsIsOpen, setAnalyticsIsOpen] = useState(false)
 
   // Variants
   const variants = {
-    dormant: {
-      x: 0,
-    },
-    partial: {
-      x: 938,
-      transition: { duration: 0.3, ease: 'easeInOut' }
+    closed: {
+      width: "0px",
+      transition: { duration: 0.2, ease: 'easeInOut' }
     },
     open: {
-      x: 0,
-      transition: { duration: 0.3, ease: 'easeInOut' }
+      width: "240px",
+      transition: { duration: 0.2, ease: 'easeInOut' }
     },
-    closed: {
-      x: 600,
-      transition: { duration: 0.3, ease: 'easeInOut', }
-    }
+  }
+
+  function toggleAnalytics() {
+    setAnalyticsIsOpen(!analyticsIsOpen);
   }
 
   function openOverlay(id) {
@@ -332,7 +359,7 @@ function TestWindow(props) {
         {/* TABLE HEAD */}
         <div style={{
           width:"100%", height:"36px", display:"flex", flexDirection:"row",
-          background:"#757575", paddingLeft:"4px"}}
+          background:"#6e6e6e", paddingLeft:"4px"}}
         >
           <div style={{
             background:"#fff", marginTop:"6px", paddingLeft:"20px", paddingRight:"20px",
@@ -365,14 +392,14 @@ function TestWindow(props) {
           paddingLeft:"16px", background:"none",
         }}>
 
-          <div class="select-container">
-            <select class="nice-select">
+          <div className="select-container">
+            <select className="nice-select">
               <option value="option1">Intent tests one</option>
               <option value="option2">Intent tests two</option>
             </select>
           </div>
-          <div class="select-container">
-            <select class="nice-select">
+          <div className="select-container">
+            <select className="nice-select">
               <option value="option1">Gemma-2b</option>
               <option value="option2">Some-other-llm</option>
             </select>
@@ -381,6 +408,7 @@ function TestWindow(props) {
           <div className="test-control" 
             onClick={() => {
               orchestratorAgent.batchTest();
+              //setAnalyticsIsOpen(true);
             }} style={{
             border:'1px solid #BEBEBE', width:"28px", height:"28px", 
             borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px", cursor:"pointer"}}>
@@ -425,9 +453,7 @@ function TestWindow(props) {
 
           <div style={{flex:1}}></div>
 
-          
-
-          <div style={{marginRight:"26px"}}>
+          <div onClick={() => toggleAnalytics()} style={{marginRight:"26px", cursor:"pointer"}}>
             <i className="material-icons" style={{color: "#555", fontSize:"20px", lineHeight:"28px", width:"20px"}}>
               bar_chart_4_bars
             </i> 
@@ -439,7 +465,7 @@ function TestWindow(props) {
 
         <div style={{flex:1, overflow:"none", background:"none", display:"flex", flexDirection:"row"}}>
           <div style={{flex:1, overflowY:"scroll", background:"none", height:"100vh"}}>
-            <table className="testTable">
+            <table className="testTable" style={{paddingBottom:"220px"}}>
               <thead>
                 <tr className="tr_header">
                   <td>#</td>
@@ -502,23 +528,38 @@ function TestWindow(props) {
               </tbody>
             </table>
           </div>
-          <div style={{width:"240px", background:"#757575", marginTop:"2px", height:"100vh", display:"flex", flexDirection:"column"}}>
-            <div style={{display:"flex", flexDirection:"row"}}>
+
+          <motion.div 
+          animate={analyticsIsOpen ? 'open' : 'closed'}
+          variants={variants}
+          initial="open"
+          style={{
+            width:"240px", 
+            background:"#555", 
+            overflow:"hidden",
+            marginTop:"2px", 
+            height:"100vh", 
+            display:"flex", 
+            flexDirection:"column"}}>
+            <div style={{display:"flex", flexDirection:"row", overflow:"hidden", width:"240px"}}>
               <div style={{
-                background:"#757575", color:"#fff", height:"32px", 
-                marginTop:"0px", lineHeight:"32px", paddingLeft:"12px", flex:1}}>
+                background:"#6e6e6e", color:"#fff", height:"32px", 
+                width:"224px", 
+                marginTop:"0px", lineHeight:"32px", paddingLeft:"12px",}}>
                 Analytics
               </div>
-              <div style={{paddingRight:"12px", background:"#757575", height:"32px", marginTop:"0px",}}>
+              <div onClick={() => toggleAnalytics()} 
+                style={{width:"20px", paddingRight:"12px", background:"#6e6e6e", height:"32px", marginTop:"0px", cursor:"pointer"}}>
                 <i className="material-icons" style={{color: "#fff", fontSize:"16px", lineHeight:"32px"}}>close</i> 
               </div>
             </div>
+           
             <div style={{padding:"12px"}}>
               {/* CHARTS */}
-              
-              <div style={{width:"200px", alignItems:"center", marginTop:"16px"}}>
+              <div style={{paddingTop:"12px", color:"#ddd", fontWeight:300}}>COMPLETION</div>
+              <div style={{width:"200px", alignItems:"center", marginTop:"10px"}}>
                 <div style={{color:"#fff", position:"relative", bottom:"-3px", fontSize:"12px"}}>
-                  Test Batch Completed (%)
+                  Intent Tests One
                 </div>
                 <div style={{width:"200px", height:"4px", background:"#444", marginTop:"6px", marginBottom:"2px"}}>
                   <div style={{
@@ -530,7 +571,8 @@ function TestWindow(props) {
                   {intentTests.length} of {testResults.length}
                 </div>
               </div>
-              <div style={{display:"flex", flexDirection:"column", height:"80px", background:"none",}}>
+              <div style={{paddingTop:"20px", color:"#ddd", fontWeight:300}}>MATCHES</div>
+              <div style={{display:"flex", flexDirection:"column", background:"none",}}>
                 <TestSummary category={'All Categories'} testResults={testResults}/>
                 {
                   testResultsByCategory && (
@@ -543,7 +585,7 @@ function TestWindow(props) {
 
 
             </div>
-          </div>
+          </motion.div>
           
         </div>
       </div>
@@ -554,6 +596,7 @@ function TestWindow(props) {
         setOverlayState={setOverlayState} 
         overlayTestResultId={overlayTestResultId}
         testResults={testResults}
+        promptQueue={props.promptQueue}
       />
 
     </div>

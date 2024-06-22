@@ -14,7 +14,7 @@ function TestSummary(props) {
   }, [props.testResults]);
   
   return (
-    <div style={{marginTop:"16px", width:"200px", borderTop:"1px solid #888", paddingTop:"16px"}}>
+    <div style={{marginTop:"12px", width:"200px", borderBottom:"1px solid #777", paddingBottom:"12px"}}>
       <div style={{color:"#fff", position:"relative", bottom:"2px", fontSize:"12px"}}>{props.category}</div>
       <div style={{
         width:"200px", 

@@ -127,7 +127,7 @@ function Overlay(props) {
                 paddingLeft:"16px", background:"none",
               }}>
                 <div 
-                onClick={() => {testResult.functionAgent.getFunctionCall(updateContent)}} 
+                onClick={() => {testResult.functionAgent.getFunctionCall(updateContent, props.promptQueue)}} 
                 style={{
                   border:'1px solid #BEBEBE', width:"28px", height:"28px", cursor:"pointer",
                   borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
@@ -149,6 +149,7 @@ function Overlay(props) {
                 fontWeight:"500",
                 textAlign: "center",
                 alignItems: 'center',
+                lineHeight:"32px"
               }}>
                 {testResult.question}
               </div>

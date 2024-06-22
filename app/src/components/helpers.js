@@ -720,9 +720,32 @@ const intentTests = [
       "question": "Who wrote 'Romeo and Juliet'?",
       "type": "People"
   },
-]*/
+]
+*/
+const intentTests = [
+  {
+    "question": "Should I wear a coat tomorrow?",
+    "type": "Weather"
+  },
+  {
+      "question": "Who is known as the father of computer science?",
+      "type": "People"
+  },
+  {
+      "question": "What did Thomas Edison invent?",
+      "type": "People"
+  },
+  {
+      "question": "Who is Oprah Winfrey?",
+      "type": "People"
+  },
+  {
+      "question": "What is Mark Zuckerberg known for?",
+      "type": "People"
+  },
+]
 
-
+/*
 const intentTests = [
   {
     "question": "Should I wear a coat tomorrow?",
@@ -853,6 +876,12 @@ const intentTests = [
       "type": "People"
   },
 ]
+*/
+
+
+
+
+
 
 
 export { categories, intentTests, definitions }
