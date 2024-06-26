@@ -105,6 +105,7 @@ function App() {
     if (!openaiApiKey) {
       console.log('process.env.REACT_APP_OPENAI_KEY', process.env)
     } else {
+      const test = new OpenAI({ apiKey: openaiApiKey, dangerouslyAllowBrowser: true })
       setOpenAI(new OpenAI({ apiKey: openaiApiKey, dangerouslyAllowBrowser: true }));
     }
   }, []);

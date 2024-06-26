@@ -5,6 +5,7 @@ import Overlay from './Overlay';
 import TestSummary from './TestSummary';
 import { intentTests, categories, definitions } from './helpers';
 import { motion } from "framer-motion"
+import axios from 'axios';
 
 class FunctionCallAgent {
   constructor(orchestrator, question, openAI) {
@@ -16,20 +17,24 @@ class FunctionCallAgent {
     this.functions = [
       {
         name: "Weather",
-        description: "Get the location and timeframe, for a weather forecast",
+        description: "Get the location and timeframe for a weather forecast",
         parameters: {
           type: "object",
           properties: {
-            location: {
+            city: {
               type: "string",
-              description: "The location for the weather forecast."
+              description: "The city for the weather forecast."
+            },
+            state: {
+              type: "string",
+              description: "The state for the weather forecast."
             },
             num_days: {
               type: "integer",
               description: "Give a timeframe based on the user input in days",
             },
           },
-          required: ["location", "num_days",]
+          required: ["city", "state", "num_days",]
         }
       },{
         name: "Location",
@@ -66,13 +71,17 @@ class FunctionCallAgent {
   }
 
   async getFunctionCall(updateContent, promptQueue) {
-    updateContent(this.question);
-    updateContent("Making function call...");
+    updateContent({message:this.question, type:"user"});
+    updateContent({message:"Making function call...", type:"system"});
     
     const messages = [
       {
         role: 'system',
         content: 'You are a helpful assistant.'
+      },
+      {
+        role: 'user',
+        content: "I'll be in San Francisco tomorrow",
       },
       {
         role: 'user',
@@ -95,22 +104,22 @@ class FunctionCallAgent {
         const functionArgs = message.function_call.arguments; //JSON.parse(message.function_call.arguments);
         
         if (functionName === "Weather") {
-          new WeatherAgent(functionArgs)
+          new WeatherAgent(functionArgs, updateContent, promptQueue, this.question)
         } else if (functionName === "Location") {
-          new MapAgent(functionArgs)
+          new MapAgent(functionArgs, updateContent, promptQueue, this.question)
         } else if (functionName === "Wikipedia") {
           new WikipediaAgent(functionArgs, updateContent, promptQueue, this.question)
         }
       } else {
-        updateContent(message.content);
-        updateContent((
+        updateContent({message: message.content, type:"chat bot"});
+        updateContent({message: (
           <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
             <input type="text" placeholder="Enter some text" />
             <i className="material-icons" style={{color: "#999", fontSize:"24px"}}>
               arrow_circle_right
             </i>
           </div>
-        ));
+        ), type:"chat bot"});
       }
     } catch (error) {
       console.error('Error:', error);
@@ -119,8 +128,55 @@ class FunctionCallAgent {
 }
 
 class WeatherAgent {
-  constructor(functionArgs) {
-    //setContent([...content, functionArgs])
+  constructor(functionArgs, updateContent, promptQueue, question) {
+    const cors = 'https://cors-anywhere.herokuapp.com/'
+
+    updateContent({message: "Function type: Weather", type:"system"})
+    const argsJSON = JSON.parse(functionArgs)
+    console.log("argsJSON", argsJSON)
+
+    const getWeather = async (argsJSON) => {
+      const city = argsJSON["city"].replace(" ", "+")
+      const state = argsJSON["state"].replace(" ", "+")
+      const weatherAPIKey = process.env.REACT_APP_WEATHER_KEY
+      
+      // Get lat lon
+      const geoURL = `http://api.openweathermap.org/geo/1.0/direct?q=${city},${state},US&limit=1&appid=${weatherAPIKey}`
+      let geoResponse = await fetch(geoURL)
+      let geoData = await geoResponse.json()
+      const lat = geoData[0].lat
+      const lon = geoData[0].lon
+      updateContent({message: `Lat: ${lat} Lon ${lon}`, type:"system"})
+
+       // Get grid
+      const reponseEndPoint = await axios({
+        method: 'get',
+        url:  `https://api.weather.gov/points/${lat},${lon}`,
+        withCredentials: false,
+      })
+      updateContent({message: "reponseEndPoint: " + reponseEndPoint.data.properties.forecast, type:"system"});
+
+      const reponseForecast = await axios({
+        method: 'get',
+        url:  reponseEndPoint.data.properties.forecast,
+        withCredentials: false,
+      })
+      const forecast = reponseForecast.data.properties.periods[argsJSON.num_days * 2]
+      updateContent({
+        message: `detailedForecast for ${forecast.name}: ${forecast.detailedForecast}`, 
+        type:"system"
+      });
+
+      const promptAnswer = `
+        Using this weather report: "${forecast.detailedForecast}", 
+        Let the user know what you think the answer to this question is: ${question}`
+
+      const callback = (msg, timestamp) => {updateContent({message: msg, type:"chat bot"})}
+      updateContent({message: "Prompt: " + promptAnswer, type:"system"});
+      promptQueue.addPromptRequest(promptAnswer, callback)
+    }
+
+    getWeather(argsJSON);
   }
 }
 
@@ -132,14 +188,14 @@ class MapAgent {
 
 class WikipediaAgent {
   constructor(functionArgs, updateContent, promptQueue, question) {
-    updateContent("Function type: Wikipedia")
+    updateContent({message: "Function type: Wikipedia", type:"system"})
     const argsJSON = JSON.parse(functionArgs)
     const wikiPage = argsJSON["wikipedia_page"]
-    updateContent((<a href={`https://en.wikipedia.org/wiki/${wikiPage}`} target="blank">{wikiPage}</a>))
+    updateContent({message: (<a href={`https://en.wikipedia.org/wiki/${wikiPage}`} target="blank">{wikiPage}</a>), type:"system"})
 
-    const fetchSummary = async () => {
+    const fetchSummary = async() => {
       try {
-        updateContent("Fetching wikipedia summary: " + wikiPage)
+        updateContent({message: "Fetching wikipedia summary: " + wikiPage, type:"system"})
         const response = await fetch(
           `https://en.wikipedia.org/api/rest_v1/page/summary/${wikiPage}`
         );
@@ -149,12 +205,10 @@ class WikipediaAgent {
         }
 
         const data = await response.json();
-        updateContent("Wikipedia summary: " + data.extract);
-
         const prompt = `GIVEN: "${data.extract}" ANSWER: "${question}"`
-        updateContent("Prompt: " + prompt);
+        updateContent({message: "Prompt: " + prompt, type:"system"});
 
-        const callback = (msg, timestamp) => {updateContent(msg)}
+        const callback = (msg, timestamp) => {updateContent({message: msg, type:"chat bot"})}
         promptQueue.addPromptRequest(prompt, callback) 
       } catch (error) {
         console.log(error.message);
@@ -380,7 +434,7 @@ function TestWindow(props) {
           </div>
           <div style={{"flex":1}}></div>
           <div className="tab-control" style={{marginLeft:"12px", marginRight:"12px", cursor:"pointer"}} onClick={() => setOverlayState("partial")}>
-            <i className="material-icons" style={{color: "#ddd", fontSize:"24spx", lineHeight:"36px",}}>arrow_circle_left</i>  
+            <i className="material-icons" style={{color: "#eee", fontSize:"24spx", lineHeight:"36px",}}>arrow_circle_left</i>  
           </div>
 
         </div>
@@ -410,49 +464,32 @@ function TestWindow(props) {
               orchestratorAgent.batchTest();
               //setAnalyticsIsOpen(true);
             }} style={{
-            border:'1px solid #BEBEBE', width:"28px", height:"28px", 
-            borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px", cursor:"pointer"}}>
-            <i className="material-icons" style={{color: "#555", fontSize:"15px", lineHeight:"28px"}}>play_arrow</i> 
+            border:'1px solid #777', width:"28px", height:"28px", 
+            borderRadius:"5px", background:"#777", textAlign:"center", lineHeight:"28px", cursor:"pointer"}}>
+            <i className="material-icons" style={{color: "#fff", fontSize:"15px", lineHeight:"28px"}}>play_arrow</i> 
           </div>
-          <div style={{
+          <div className="test-control" style={{
             border:'1px solid #BEBEBE', width:"28px", height:"28px", marginLeft:"8px",
-            borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
+            borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px", cursor:"pointer"}}>
             <i className="material-icons" style={{color: "#555", fontSize:"16px", lineHeight:"28px"}}>restart_alt</i> 
           </div>
 
-          
-          {/*
-          <div style={{width:"1px", height:"60px", background:"#ccc", marginLeft:"32px", marginRight:"8px"}}></div>
-
-          <div style={{display:"flex", flexDirection:"row", height:"80px", background:"none",}}>
-            <TestSummary category={'All Categories'} testResults={testResults}/>
-            {
-              testResultsByCategory && (
-                Object.keys(testResultsByCategory).map((category, index) => (
-                  <TestSummary key={"TS_"+index} category={category} testResults={testResultsByCategory[category]} />
-                ))
-              )
-            }
+          <div style={{
+            width:"280px", marginLeft:"80px", marginRight:"8px" }}>
+            <input type="text" placeholder="Add a test question" style={{
+              width: "100%", height:"28px", borderRadius:"5px", paddingLeft:"8px",
+              border:"1px solid #BEBEBE", color: "#555",
+              }} />
           </div>
 
-          <div style={{width:"1px", height:"60px", background:"#ccc", marginLeft:"32px", marginRight:"32px"}}></div>
-
-          <div style={{display:"flex", flexDirection:"column", fontSize:"12px", lineHeight:"14px"}}>
-          {
-            falsePositives && (
-              Object.keys(falsePositives).map((category, index) => (
-                <div key={"FP_"+index} style={{display:"flex", flexDirection:"row"}}>
-                  <div style={{width:"60px"}}>{`${category}`} : </div>
-                  <div style={{fontWeight:"600"}}>{`${falsePositives[category].length}`}</div>
-                </div>
-              ))
-            )
-          }
+          <div className="test-control" style={{
+            border:'1px solid #BEBEBE', width:"28px", height:"28px", marginLeft:"14px",
+            borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px", cursor:"pointer"}}>
+            <i className="material-icons" style={{color: "#555", fontSize:"16px", lineHeight:"28px"}}>add</i> 
           </div>
-        */}
 
           <div style={{flex:1}}></div>
-
+          
           <div onClick={() => toggleAnalytics()} style={{marginRight:"26px", cursor:"pointer"}}>
             <i className="material-icons" style={{color: "#555", fontSize:"20px", lineHeight:"28px", width:"20px"}}>
               bar_chart_4_bars

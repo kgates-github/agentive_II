@@ -12,6 +12,7 @@ b) The text is related to the weather.
 c) The text is related to people.
 d) The text is not related to location or the weather or people.`
 
+
 /*
 const intentTests = [
     {
@@ -658,59 +659,14 @@ const intentTests = [
     }
 ]
 
-
 const intentTests = [
   {
-      "question": "Who was the first person to step on the moon?",
-      "type": "People"
+    "question": "I'll be in San Francisco tomorrow. Should I wear a coat?",
+    "type": "Weather"
   },
   {
-      "question": "Do I need an umbrella tomorrow",
-      "type": "Weather"
-  },
-  {
-      "question": "What’s the weather like this week?",
-      "type": "Weather"
-  },
-  {
-      "question": "Is it going to rain today?",
-      "type": "Weather"
-  },
-  {
-      "question": "What’s the temperature right now?",
-      "type": "Weather"
-  },
-  {
-      "question": "What is the capital of France?",
-      "type": "Location"
-  },
-  {
-      "question": "How far is Berkeley from San Francisco?",
-      "type": "Location"
-  },
-  {
-      "question": "Where is the Taj Mahal?",
-      "type": "Location"
-  },
-  {
-      "question": "What are the top tourist attractions in Paris?",
-      "type": "Location"
-  },
-  {
-      "question": "Where is the Great Wall of China located?",
-      "type": "Location"
-  },
-  {
-      "question": "What did Albert Einstein do?",
-      "type": "People"
-  },
-  {
-      "question": "Who is the current president of the United States?",
-      "type": "People"
-  },
-  {
-      "question": "Who was Cleopatra?",
-      "type": "People"
+    "question": "Who was Cleopatra?",
+    "type": "People"
   },
   {
       "question": "What achievements is Nelson Mandela famous for?",
@@ -720,6 +676,85 @@ const intentTests = [
       "question": "Who wrote 'Romeo and Juliet'?",
       "type": "People"
   },
+  {
+      "question": "What are some facts about Martin Luther King Jr.?",
+      "type": "People"
+  },
+  {
+      "question": "What is J.K. Rowling known for?",
+      "type": "People"
+  },
+]
+
+const intentTests = [
+  {
+    "question": "Will I need a coat tomorrow?",
+    "type": "Weather"
+},
+{
+  "question": "What is FDR known for?",
+  "type": "People"
+},
+{
+    "question": "What did Albert Einstein do?",
+    "type": "People"
+},
+{
+    "question": "Who is the current president of the United States?",
+    "type": "People"
+},
+{
+    "question": "Who was Cleopatra?",
+    "type": "People"
+},
+{
+    "question": "What achievements is Nelson Mandela famous for?",
+    "type": "People"
+},
+{
+    "question": "Who wrote 'Romeo and Juliet'?",
+    "type": "People"
+},
+{
+    "question": "What are some facts about Martin Luther King Jr.?",
+    "type": "People"
+},
+{
+    "question": "What is J.K. Rowling known for?",
+    "type": "People"
+},
+{
+    "question": "What did Steve Jobs invent?",
+    "type": "People"
+},
+{
+    "question": "Who is Malala Yousafzai?",
+    "type": "People"
+},
+{
+    "question": "What is Mahatma Gandhi known for?",
+    "type": "People"
+},
+{
+    "question": "Who was Winston Churchill?",
+    "type": "People"
+},
+{
+    "question": "What did Leonardo da Vinci do?",
+    "type": "People"
+},
+{
+    "question": "Can you tell me about Rosa Parks?",
+    "type": "People"
+},
+{
+    "question": "Who was Frida Kahlo?",
+    "type": "People"
+},
+{
+    "question": "What is Ada Lovelace known for?",
+    "type": "People"
+},
 ]
 */
 const intentTests = [
@@ -728,31 +763,7 @@ const intentTests = [
     "type": "Weather"
   },
   {
-      "question": "Who is known as the father of computer science?",
-      "type": "People"
-  },
-  {
-      "question": "What did Thomas Edison invent?",
-      "type": "People"
-  },
-  {
-      "question": "Who is Oprah Winfrey?",
-      "type": "People"
-  },
-  {
-      "question": "What is Mark Zuckerberg known for?",
-      "type": "People"
-  },
-]
-
-/*
-const intentTests = [
-  {
-    "question": "Should I wear a coat tomorrow?",
-    "type": "Weather"
-  },
-  {
-      "question": "Do I need an umbrella?",
+      "question": "Will I need an umbrella this Friday?",
       "type": "Weather"
   },
   {
@@ -775,108 +786,8 @@ const intentTests = [
       "question": "How windy is it outside?",
       "type": "Weather"
   },
-  {
-      "question": "Should I take a jacket with me?",
-      "type": "Weather"
-  },
-  {
-      "question": "Is it sunny outside?",
-      "type": "Weather"
-  },
-  {
-      "question": "Will there be a thunderstorm tonight?",
-      "type": "Weather"
-  },
-  {
-    "question": "What are the best places to visit in Japan?",
-    "type": "Location"
-  },
-  {
-    "question": "Where is Mount Everest?",
-    "type": "Location"
-  },
-  {
-    "question": "What is the capital of Australia?",
-    "type": "Location"
-  },
-  {
-    "question": "How do I get to Central Park?",
-    "type": "Location"
-  },
-  {
-    "question": "Where can I find the Statue of Liberty?",
-    "type": "Location"
-  },
-  {
-    "question": "What is the distance between London and Paris?",
-    "type": "Location"
-  },
-  {
-    "question": "Which continent is Egypt in?",
-    "type": "Location"
-  },
-  {
-    "question": "What is the largest city in Canada?",
-    "type": "Location"
-  },
-  {
-    "question": "Where is the Colosseum?",
-    "type": "Location"
-  },
-  {
-    "question": "How far is it from Sydney to Melbourne?",
-    "type": "Location"
-  },
-  {
-    "question": "What are some accomplishments of Ada Lovelace?",
-    "type": "People"
-  },
-  {
-      "question": "What is Elon Musk known for?",
-      "type": "People"
-  },
-  {
-      "question": "Who is the CEO of Amazon?",
-      "type": "People"
-  },
-  {
-      "question": "What is Barack Obama famous for?",
-      "type": "People"
-  },
-  {
-      "question": "Who is Serena Williams?",
-      "type": "People"
-  },
-  {
-      "question": "What are some famous works of Vincent van Gogh?",
-      "type": "People"
-  },
-  {
-      "question": "Who was Marie Curie?",
-      "type": "People"
-  },
-  {
-      "question": "What did Nikola Tesla invent?",
-      "type": "People"
-  },
-  {
-      "question": "Who is known as the father of computer science?",
-      "type": "People"
-  },
-  {
-      "question": "What did Thomas Edison invent?",
-      "type": "People"
-  },
-  {
-      "question": "Who is Oprah Winfrey?",
-      "type": "People"
-  },
-  {
-      "question": "What is Mark Zuckerberg known for?",
-      "type": "People"
-  },
 ]
-*/
+
 
 
 

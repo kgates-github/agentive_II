@@ -47,7 +47,6 @@ function Overlay(props) {
   useEffect(() => {  
     if (props.overlayTestResultId) {
       const result = props.testResults.find(result => result.id === props.overlayTestResultId);
-      console.log(result)
       setTestResult(result);
       setContent([])
     }
@@ -94,7 +93,7 @@ function Overlay(props) {
         </div>
         <DetailsHeader 
           key={"details_header"} 
-          name={"Details"}
+          name={"Human Experience"}
           detailsWidth={detailsWidth}
           setDetailsWidth={setDetailsWidth}
           detailsIsOpen={detailsIsOpen} 
@@ -136,7 +135,7 @@ function Overlay(props) {
                 <div 
                 onClick={() => {setContent([])}} 
                 style={{
-                  border:'1px solid #BEBEBE', width:"28px", height:"28px", marginLeft:"8px",
+                  border:'1px solid #BEBEBE', width:"28px", height:"28px", marginLeft:"8px", cursor:"pointer",
                   borderRadius:"5px", background:"#F5F5F5", textAlign:"center", lineHeight:"28px"}}>
                   <i className="material-icons" style={{color: "#555", fontSize:"16px", lineHeight:"28px"}}>restart_alt</i> 
                 </div>
@@ -144,12 +143,14 @@ function Overlay(props) {
               </div>
               <div style={{
                 flex:1,
+                display:"flex",
                 padding:"12px", 
                 textTransform:"uppercase", 
                 fontWeight:"500",
                 textAlign: "center",
                 alignItems: 'center',
-                lineHeight:"32px"
+                justifyContent:"center",
+                lineHeight:"14px"
               }}>
                 {testResult.question}
               </div>
@@ -168,7 +169,7 @@ function Overlay(props) {
             <ol style={{display:"flex", flexDirection:"column"}}>
               {Array.isArray(content) && content.map((item, index) => (
                 <li key={"content_"+index}>
-                  {item}
+                  <span style={{textTransform:"uppercase", color:"#333", fontWeight:"300"}}>{item.type}: </span>{item.message}
                 </li>
               ))}
             </ol>
@@ -181,6 +182,7 @@ function Overlay(props) {
           detailsWidth={detailsWidth} 
           detailsIsOpen={detailsIsOpen}
           detailsIsExpanded={detailsIsExpanded}
+          content={content}
         />
       </div>
       {/* END OVERLAY BODY */}
