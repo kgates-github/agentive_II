@@ -165,13 +165,17 @@ class WeatherAgent {
       updateContent({
         message: `detailedForecast for ${forecast.name}: ${forecast.detailedForecast}`, 
         type:"system"
-      });
+      })
 
       const promptAnswer = `
         Using this weather report: "${forecast.detailedForecast}", 
-        Let the user know what you think the answer to this question is: ${question}`
+        Come up with a short response to this: "${question}".`
 
-      const callback = (msg, timestamp) => {updateContent({message: msg, type:"chat bot"})}
+      const callback = (msg, timestamp) => {
+        let str = msg.replace(/^[^:]*:/, '').trim();
+        str = str.replace(/"/g, '');
+        updateContent({message: str, type:"chat bot"})
+      }
       updateContent({message: "Prompt: " + promptAnswer, type:"system"});
       promptQueue.addPromptRequest(promptAnswer, callback)
     }
@@ -205,10 +209,14 @@ class WikipediaAgent {
         }
 
         const data = await response.json();
-        const prompt = `GIVEN: "${data.extract}" ANSWER: "${question}"`
+        const prompt = `Given this wikipedia page: "${data.extract}" 
+        Provide a short, appropriate response to this: "${question}".`
         updateContent({message: "Prompt: " + prompt, type:"system"});
 
-        const callback = (msg, timestamp) => {updateContent({message: msg, type:"chat bot"})}
+        const callback = (msg, timestamp) => {
+          const str = msg.replace(/^[^:]*:/, '').trim();
+          updateContent({message: str, type:"chat bot"})
+        }
         promptQueue.addPromptRequest(prompt, callback) 
       } catch (error) {
         console.log(error.message);

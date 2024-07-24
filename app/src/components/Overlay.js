@@ -118,6 +118,7 @@ function Overlay(props) {
           <div style={{
               display: 'flex',
               width:"none",
+              paddingTop:"2px",
               background:"none"
             }}>
               <div style={{
